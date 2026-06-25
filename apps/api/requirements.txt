@@ -1,0 +1,35 @@
+# === Auto-generated from pyproject.toml — use pyproject.toml as source of truth ===
+# For Fly.io deployment: pip install -r requirements.txt --break-system-packages
+
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+python-multipart>=0.0.20
+httpx>=0.27.0
+pydantic>=2.10.0
+pydantic-settings>=2.6.0
+pyjwt[crypto]>=2.10.0
+bcrypt>=4.2.0
+passlib[bcrypt]>=1.7.4
+sqlalchemy[asyncio]>=2.0.36
+asyncpg>=0.30.0
+alembic>=1.14.0
+greenlet>=3.1.0
+redis[hiredis]>=5.2.0
+arq>=0.26.1
+boto3>=1.35.0
+opencv-python-headless>=4.10.0
+numpy>=1.26.0
+pillow>=11.0.0
+python-magic>=0.4.27
+easyocr>=1.7.2
+pytesseract>=0.3.13
+onnxruntime>=1.20.0
+mediapipe>=0.10.18
+rembg>=2.0.57
+groq>=0.11.0
+resend>=2.4.0
+sentry-sdk[fastapi]>=2.18.0
+structlog>=24.4.0
+orjson>=3.10.0
+python-slugify>=8.0.4
+tenacity>=9.0.0

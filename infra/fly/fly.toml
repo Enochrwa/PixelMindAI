@@ -1,0 +1,45 @@
+# fly.toml — PixelMind AI Backend on Fly.io
+# Deploy: flyctl deploy --config infra/fly/fly.toml
+
+app = "pixelmind-api"
+primary_region = "jnb"  # Johannesburg — closest to Rwanda/East Africa
+kill_signal = "SIGINT"
+kill_timeout = "30s"
+
+[build]
+  dockerfile = "../../apps/api/Dockerfile"
+
+[env]
+  PORT = "8000"
+  ENVIRONMENT = "production"
+  PYTHONUNBUFFERED = "1"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = false  # CRITICAL: no sleep on Fly.io free VMs
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 50
+    soft_limit = 40
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
+
+[checks]
+  [checks.health]
+    grace_period = "30s"
+    interval = "30s"
+    method = "GET"
+    path = "/health"
+    port = 8000
+    timeout = "5s"
+
+# Release command: run DB migrations before new version starts serving traffic
+[deploy]
+  release_command = "alembic upgrade head"

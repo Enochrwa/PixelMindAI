@@ -1,0 +1,3 @@
+# Convenience alias — delegates to infra/docker/docker-compose.yml
+include:
+  - infra/docker/docker-compose.yml

@@ -1,0 +1,177 @@
+[project]
+name = "pixelmind-ai-api"
+version = "0.1.0"
+description = "PixelMind AI — FastAPI Backend: Visual Intelligence Operating System"
+authors = [{ name = "Enock Uwumukiza", email = "enockuwumukiza850@gmail.com" }]
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+
+dependencies = [
+    # === Web Framework ===
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "python-multipart>=0.0.20",
+    "httpx>=0.27.0",
+
+    # === Config & Validation ===
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.6.0",
+
+    # === Auth ===
+    "pyjwt[crypto]>=2.10.0",
+    "bcrypt>=4.2.0",
+    "passlib[bcrypt]>=1.7.4",
+    "python-jose[cryptography]>=3.3.0",
+
+    # === Database ===
+    "sqlalchemy[asyncio]>=2.0.36",
+    "asyncpg>=0.30.0",
+    "alembic>=1.14.0",
+    "greenlet>=3.1.0",
+
+    # === Cache / Queue ===
+    "redis[hiredis]>=5.2.0",
+    "arq>=0.26.1",
+
+    # === File Storage ===
+    "boto3>=1.35.0",
+    "botocore>=1.35.0",
+
+    # === Computer Vision Core ===
+    "opencv-python-headless>=4.10.0",
+    "numpy>=1.26.0",
+    "pillow>=11.0.0",
+    "python-magic>=0.4.27",
+
+    # === OCR Engines ===
+    "easyocr>=1.7.2",
+    "pytesseract>=0.3.13",
+
+    # === AI Inference ===
+    "onnxruntime>=1.20.0",
+    "mediapipe>=0.10.18",
+
+    # === Background Removal ===
+    "rembg>=2.0.57",
+
+    # === Language AI ===
+    "groq>=0.11.0",
+
+    # === Async Jobs & Email ===
+    "resend>=2.4.0",
+
+    # === Error Tracking ===
+    "sentry-sdk[fastapi]>=2.18.0",
+
+    # === Utilities ===
+    "structlog>=24.4.0",
+    "orjson>=3.10.0",
+    "python-slugify>=8.0.4",
+    "tenacity>=9.0.0",
+    "rich>=13.9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
+    "httpx>=0.27.0",
+    "factory-boy>=3.3.1",
+    "faker>=30.0.0",
+    "respx>=0.21.1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+fix = true
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # flake8-bugbear
+    "C4",   # flake8-comprehensions
+    "UP",   # pyupgrade
+    "ARG",  # flake8-unused-arguments
+    "SIM",  # flake8-simplify
+    "TCH",  # flake8-type-checking
+    "TID",  # flake8-tidy-imports
+    "RUF",  # ruff-specific rules
+    "PTH",  # flake8-use-pathlib
+    "ANN",  # flake8-annotations
+    "D",    # pydocstyle
+    "S",    # bandit security
+    "N",    # pep8 naming
+]
+ignore = [
+    "D100", "D101", "D102", "D103", "D104", "D105", "D107",
+    "D203", "D213",
+    "ANN101", "ANN102", "ANN401",
+    "S101",   # assert in tests
+    "S311",   # random — we use secrets module for crypto
+]
+per-file-ignores = { "tests/**/*.py" = ["S101", "ANN", "ARG001"] }
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+force-sort-within-sections = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_any_generics = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+ignore_missing_imports = false
+plugins = ["pydantic.mypy", "sqlalchemy.ext.mypy.plugin"]
+
+[[tool.mypy.overrides]]
+module = [
+    "easyocr.*",
+    "cv2.*",
+    "mediapipe.*",
+    "rembg.*",
+    "boto3.*",
+    "botocore.*",
+    "magic.*",
+    "PIL.*",
+    "arq.*",
+    "passlib.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "-v --cov=app --cov-report=term-missing --cov-report=xml"
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning",
+    "ignore::UserWarning",
+]
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["*/tests/*", "*/migrations/*", "*/__init__.py"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true

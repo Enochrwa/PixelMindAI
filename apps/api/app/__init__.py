@@ -1,0 +1,1 @@
+"""PixelMind AI — FastAPI Backend."""

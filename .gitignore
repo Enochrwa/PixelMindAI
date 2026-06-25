@@ -1,0 +1,74 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+.venv/
+venv/
+env/
+ENV/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+.hypothesis/
+.tox/
+pip-wheel-metadata/
+
+# === Node / pnpm ===
+node_modules/
+.pnpm-store/
+dist/
+build/
+.turbo/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+.pnpm-debug.log*
+
+# === Environment ===
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# === IDE ===
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# === Secrets / Keys ===
+*.pem
+*.key
+*.cert
+*.p12
+*.pfx
+secrets/
+
+# === ONNX / ML models (large binary, store in infra/models/.gitkeep) ===
+infra/models/*.onnx
+infra/models/*.pt
+infra/models/*.pth
+!infra/models/.gitkeep
+
+# === Test output ===
+test-results/
+playwright-report/
+
+# === Docker ===
+.docker/
+
+# === Vercel ===
+.vercel/
