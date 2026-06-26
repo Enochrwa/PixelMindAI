@@ -10,7 +10,9 @@ describe('LandingPage', () => {
         <LandingPage />
       </BrowserRouter>
     );
-    expect(screen.getByText(/PixelMind/i)).toBeInTheDocument();
+    expect(
+      screen.getByText((_, element) => element?.textContent === 'PixelMind AI')
+    ).toBeInTheDocument();
   });
 
   it('shows CTA buttons', () => {

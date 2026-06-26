@@ -9,14 +9,14 @@
 └────────────────────────────┬────────────────────────────────────┘
                              │ HTTPS
 ┌────────────────────────────▼────────────────────────────────────┐
-│                  FastAPI Backend (Fly.io JNB)                   │
+│                  FastAPI Backend (Render)                       │
 │  ┌──────────┐  ┌──────────┐  ┌────────────┐  ┌────────────┐   │
 │  │ /auth/*  │  │ /files/* │  │ /tools/*   │  │ /jobs/*    │   │
 │  │ JWT auth │  │ R2 upload│  │ CV enqueue │  │ status poll│   │
 │  └──────────┘  └──────────┘  └─────┬──────┘  └────────────┘   │
 │                                     │                           │
 │  ┌──────────────────────────────────▼────────────────────────┐  │
-│  │              ARQ Worker (same Fly.io VM)                  │  │
+│  │              ARQ Worker (same Render instance)            │  │
 │  │  receipt_scanner | invoice_reader | background_remover   │  │
 │  │  passport_photo | deepfake_detector | plant_disease ...  │  │
 │  └──────────────────────────────────────────────────────────┘  │

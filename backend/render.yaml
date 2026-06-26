@@ -1,0 +1,57 @@
+# render.yaml — PixelMind AI Backend on Render.com
+# Docs: https://render.com/docs/blueprint-spec
+#
+# This Blueprint defines the API as a Render Web Service built from the
+# Dockerfile in this directory. Connect the repo in the Render dashboard
+# and select "backend" as the root directory, or use `render blueprint launch`.
+
+services:
+  - type: web
+    name: pixelmind-api
+    runtime: docker
+    repo: https://github.com/Enochrwa/PixelMindAI.git
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: frankfurt # closest free-tier region to East Africa at time of writing
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: PORT
+        value: "8000"
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: HOST
+        value: "0.0.0.0"
+      - key: SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_URL_POOLED
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET_NAME
+        sync: false
+      - key: R2_PUBLIC_URL
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: https://pixelmind.vercel.app
+    preDeployCommand: alembic upgrade head

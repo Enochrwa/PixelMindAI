@@ -2,14 +2,14 @@ name: Backend CI/CD
 
 on:
   push:
-    branches: [main, develop, feature/sprint-one-implementation]
+    branches: [main, develop, feature/sprint-one-implementation, feature/folder-restructure]
     paths:
-      - 'apps/api/**'
+      - 'backend/**'
       - '.github/workflows/backend.yml'
   pull_request:
     branches: [main, develop]
     paths:
-      - 'apps/api/**'
+      - 'backend/**'
 
 env:
   PYTHON_VERSION: '3.11'
@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: apps/api
+        working-directory: backend
     steps:
       - uses: actions/checkout@v4
 
@@ -42,7 +42,7 @@ jobs:
         run: ruff format --check .
 
       - name: Mypy type check
-        # Run from inside apps/api so 'app' is the top-level package
+        # Run from inside backend so 'app' is the top-level package
         run: mypy app --ignore-missing-imports --explicit-package-bases
 
   test:
@@ -51,7 +51,7 @@ jobs:
     needs: lint
     defaults:
       run:
-        working-directory: apps/api
+        working-directory: backend
     services:
       postgres:
         image: postgres:16-alpine
@@ -120,19 +120,19 @@ jobs:
         continue-on-error: true
 
   deploy:
-    name: Deploy to Fly.io
+    name: Deploy to Render
     runs-on: ubuntu-latest
     needs: test
     if: github.ref == 'refs/heads/main'
-    defaults:
-      run:
-        working-directory: apps/api
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: superfly/flyctl-actions/setup-flyctl@master
-
-      - name: Deploy
-        run: flyctl deploy --remote-only
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      - name: Trigger Render deploy hook
+        # Render auto-deploys on push by default; this hook gives us an explicit,
+        # test-gated trigger instead of relying on Render's own (untested) auto-deploy.
+        # Create the hook in Render dashboard → service → Settings → Deploy Hook,
+        # and store the URL as the RENDER_DEPLOY_HOOK_URL repo secret.
+        run: |
+          if [ -z "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" ]; then
+            echo "RENDER_DEPLOY_HOOK_URL secret not set — skipping deploy trigger."
+            exit 0
+          fi
+          curl -fsS -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
