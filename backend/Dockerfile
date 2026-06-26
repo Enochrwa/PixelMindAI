@@ -38,4 +38,5 @@ RUN python -c "from rembg import new_session; new_session('u2net')" || true
 
 EXPOSE 8000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+# Render (and most PaaS) inject $PORT at runtime; default to 8000 for local/Docker Compose.
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1"]

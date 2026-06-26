@@ -13,25 +13,23 @@ command -v docker >/dev/null 2>&1 || { echo "❌ Docker required for local DB/Re
 
 echo "✅ Prerequisites OK"
 
-# Install Node dependencies
-echo "📦 Installing Node dependencies..."
-pnpm install
+# Install frontend (Node) dependencies
+echo "📦 Installing frontend dependencies..."
+(cd frontend && pnpm install)
 
 # Copy env files
-if [ ! -f apps/api/.env ]; then
-  cp apps/api/.env.example apps/api/.env
-  echo "⚠️  Created apps/api/.env — fill in real values before running"
+if [ ! -f backend/.env ]; then
+  cp backend/.env.example backend/.env
+  echo "⚠️  Created backend/.env — fill in real values before running"
 fi
 
-if [ ! -f apps/web/.env.local ]; then
-  cp apps/web/.env.example apps/web/.env.local
+if [ ! -f frontend/.env.local ]; then
+  cp frontend/.env.example frontend/.env.local
 fi
 
 # Install Python dependencies
-echo "🐍 Installing Python dependencies..."
-cd apps/api
-python3 -m pip install -r requirements.txt --break-system-packages --quiet
-cd ../..
+echo "🐍 Installing backend (Python) dependencies..."
+(cd backend && python3 -m pip install -r requirements.txt --break-system-packages --quiet)
 
 # Start Docker services
 echo "🐳 Starting PostgreSQL + Redis..."
@@ -45,12 +43,13 @@ done
 
 # Run migrations
 echo "🗄️  Running database migrations..."
-cd apps/api && alembic upgrade head && cd ../..
+(cd backend && alembic upgrade head)
 
 echo ""
 echo "✅ Setup complete!"
 echo ""
-echo "Start dev servers: pnpm dev"
-echo "  API: http://localhost:8000"
-echo "  Web: http://localhost:5173"
+echo "Start the backend:  cd backend && uvicorn main:app --reload"
+echo "Start the frontend: cd frontend && pnpm dev"
+echo "  API:  http://localhost:8000"
+echo "  Web:  http://localhost:5173"
 echo "  Docs: http://localhost:8000/docs"

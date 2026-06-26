@@ -18,50 +18,55 @@
 
 PixelMind AI is a multi-tenant SaaS platform delivering 43 professional computer vision tools through a single, unified interface. From OCR and passport photo generation to deepfake detection and crop disease diagnosis — all running on a zero-cost infrastructure stack.
 
-Built with FastAPI + React/TypeScript, deployed on Fly.io + Vercel, powered by OpenCV, ONNX Runtime, and Groq's free LLM API.
+Built with FastAPI + React/TypeScript, deployed on Render + Vercel, powered by OpenCV, ONNX Runtime, and Groq's free LLM API.
 
 ## 🗂️ Repository Structure
 
+The repo is split into two distinct, independently deployable projects —
+**`backend/`** (deploys to Render) and **`frontend/`** (deploys to Vercel) —
+each with its own config, dependencies, and `docs/` folder.
+
 ```
 pixelmind-ai/
-├── apps/
-│   ├── api/                    # FastAPI backend
-│   │   ├── app/
-│   │   │   ├── core/           # Config, security, storage, queue
-│   │   │   ├── api/v1/         # REST endpoints (auth, files, jobs, tools)
-│   │   │   ├── cv/             # Computer vision modules
-│   │   │   │   ├── ocr/        # EasyOCR + PaddleOCR + Tesseract
-│   │   │   │   ├── photo/      # Background removal, upscaling, face AI
-│   │   │   │   ├── creator/    # CLIP, Groq captions, memes
-│   │   │   │   ├── business/   # Counting, crowd analysis, PPE
-│   │   │   │   ├── agriculture/# Plant disease, crop health, soil
-│   │   │   │   └── entertainment/ # Age, emotion, deepfake, pets
-│   │   │   ├── db/             # SQLAlchemy models + Alembic migrations
-│   │   │   ├── middleware/     # Rate limiting
-│   │   │   ├── workers/        # ARQ async job workers
-│   │   │   └── services/       # Business logic services
-│   │   ├── tests/              # pytest (unit + integration)
-│   │   ├── pyproject.toml      # Dependencies, ruff, mypy, pytest config
-│   │   ├── Dockerfile          # Multi-stage production image
-│   │   └── alembic.ini
-│   └── web/                    # React + Vite + TypeScript + Tailwind
-│       └── src/
-│           ├── components/     # UI, layout, tool-specific components
-│           ├── pages/          # Route pages
-│           ├── hooks/          # useJobPoller, useCurrentUser, etc.
-│           ├── stores/         # Zustand (auth, UI state)
-│           ├── lib/            # Axios client with auto-refresh
-│           └── types/          # TypeScript types
-├── packages/
-│   ├── shared-types/           # Types shared across apps
-│   └── ui/                     # Shared React component library
+├── backend/                    # FastAPI backend — deploys to Render
+│   ├── app/
+│   │   ├── core/               # Config, security, storage, queue
+│   │   ├── api/v1/             # REST endpoints (auth, files, jobs, tools)
+│   │   ├── cv/                 # Computer vision modules
+│   │   │   ├── ocr/            # EasyOCR + PaddleOCR + Tesseract
+│   │   │   ├── photo/          # Background removal, upscaling, face AI
+│   │   │   ├── creator/        # CLIP, Groq captions, memes
+│   │   │   ├── business/       # Counting, crowd analysis, PPE
+│   │   │   ├── agriculture/    # Plant disease, crop health, soil
+│   │   │   └── entertainment/  # Age, emotion, deepfake, pets
+│   │   ├── db/                 # SQLAlchemy models + Alembic migrations
+│   │   ├── middleware/         # Rate limiting
+│   │   ├── workers/            # ARQ async job workers
+│   │   └── services/           # Business logic services
+│   ├── tests/                  # pytest (unit + integration)
+│   ├── docs/                   # Backend-specific docs (Render deployment)
+│   ├── pyproject.toml          # Dependencies, ruff, mypy, pytest config
+│   ├── Dockerfile              # Multi-stage production image
+│   ├── render.yaml             # Render Blueprint (IaC)
+│   └── alembic.ini
+├── frontend/                    # React + Vite + TypeScript + Tailwind — deploys to Vercel
+│   ├── src/
+│   │   ├── components/         # UI, layout, tool-specific components
+│   │   ├── pages/               # Route pages
+│   │   ├── hooks/                # useJobPoller, useCurrentUser, etc.
+│   │   ├── stores/               # Zustand (auth, UI state)
+│   │   ├── lib/                  # Axios client with auto-refresh
+│   │   └── types/                 # TypeScript types
+│   ├── packages/                # @pixelmind/ui, @pixelmind/shared-types (scaffolded, unused)
+│   ├── docs/                    # Frontend-specific docs (Vercel deployment)
+│   ├── package.json
+│   └── vercel.json
+├── docs/                        # Repo-wide docs: architecture, PRD, sprint plan
 ├── infra/
-│   ├── fly/fly.toml            # Fly.io deployment (no-sleep, Johannesburg)
 │   ├── docker/docker-compose.yml # Local dev stack
-│   └── models/                 # ONNX model weights (.gitignored, add manually)
-├── .github/workflows/          # CI/CD: backend, frontend, security
-├── turbo.json                  # Turborepo pipeline
-└── pnpm-workspace.yaml
+│   └── models/                  # ONNX model weights (.gitignored, add manually)
+├── .github/workflows/           # CI/CD: backend, frontend, security
+└── scripts/                      # setup.sh, seed_tools.py
 ```
 
 ## 🚀 Quick Start (Local Dev)
@@ -71,45 +76,60 @@ pixelmind-ai/
 - Python ≥ 3.11
 - Docker & Docker Compose
 
-### 1. Clone & install
+### 1. Clone
 
 ```bash
 git clone https://github.com/Enochrwa/PixelMindAI.git
 cd PixelMindAI
-pnpm install
 ```
 
-### 2. Environment setup
+### 2. Backend setup
 
 ```bash
-cp apps/api/.env.example apps/api/.env
-cp apps/web/.env.example apps/web/.env.local
-# Fill in real values in apps/api/.env
+cd backend
+cp .env.example .env   # fill in real values
+python3 -m pip install -r requirements.txt --break-system-packages
+cd ..
 ```
 
-### 3. Start infrastructure
+### 3. Frontend setup
+
+```bash
+cd frontend
+pnpm install
+cp .env.example .env.local
+cd ..
+```
+
+### 4. Start infrastructure
 
 ```bash
 docker compose up -d postgres redis
 ```
 
-### 4. Run database migrations
+### 5. Run database migrations
 
 ```bash
-cd apps/api
+cd backend
 alembic upgrade head
+cd ..
 ```
 
-### 5. Start dev servers
+### 6. Start dev servers
 
 ```bash
-# From repo root — starts both API and web concurrently
-pnpm dev
+# Terminal 1 — backend
+cd backend && uvicorn main:app --reload
+
+# Terminal 2 — frontend
+cd frontend && pnpm dev
 ```
 
 - **API:** http://localhost:8000
 - **Web:** http://localhost:5173
 - **API Docs:** http://localhost:8000/docs (development only)
+
+> Or run `./scripts/setup.sh` to do all of the above in one shot.
 
 ## 🛠️ Tech Stack
 
@@ -127,27 +147,30 @@ pnpm dev
 | Email | Resend (primary) + Brevo (fallback) |
 | Error Tracking | Sentry (5K errors/month free) |
 | Analytics | PostHog (1M events/month free) |
-| Deployment | Fly.io (backend, Johannesburg) + Vercel (frontend) |
+| Deployment | **Render** (backend) + **Vercel** (frontend) |
 | CI/CD | GitHub Actions — lint → test → build → deploy |
+
+See [`backend/docs/DEPLOYMENT.md`](backend/docs/DEPLOYMENT.md) and
+[`frontend/docs/DEPLOYMENT.md`](frontend/docs/DEPLOYMENT.md) for deployment
+setup, and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full
+system architecture.
 
 ## 🔬 Code Quality
 
 ```bash
-# Python
-cd apps/api
+# Backend
+cd backend
 ruff check .          # Lint
 ruff format .         # Format
 mypy app              # Type check
 pytest tests/         # Tests
 
-# TypeScript
-cd apps/web
+# Frontend
+cd frontend
 pnpm lint             # ESLint
 pnpm typecheck        # tsc --noEmit
 pnpm test             # Vitest
-
-# From root
-pnpm build            # Full turbo build
+pnpm build            # Production build
 ```
 
 ## 📋 Sprint Roadmap

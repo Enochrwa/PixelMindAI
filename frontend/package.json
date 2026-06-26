@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "dev": "vite --port 5173",
     "build": "tsc --noEmit && vite build",
@@ -11,7 +15,19 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run --coverage",
     "test:watch": "vitest",
-    "clean": "rm -rf dist .turbo"
+    "clean": "rm -rf dist coverage .tsbuildinfo",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\" --ignore-path .gitignore",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\" --ignore-path .gitignore",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "src/**/*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "@headlessui/react": "^2.2.0",
@@ -29,6 +45,8 @@
     "zustand": "^5.0.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.0.0",
+    "@commitlint/config-conventional": "^19.0.0",
     "@eslint/js": "^10.0.1",
     "@tailwindcss/typography": "^0.5.15",
     "@testing-library/jest-dom": "^6.6.0",
@@ -45,7 +63,9 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-react": "^7.37.0",
     "eslint-plugin-react-hooks": "^5.0.0",
+    "husky": "^9.0.0",
     "jsdom": "^25.0.0",
+    "lint-staged": "^15.0.0",
     "postcss": "^8.4.49",
     "prettier": "^3.3.0",
     "prettier-plugin-tailwindcss": "^0.6.9",
