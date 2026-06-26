@@ -21,13 +21,12 @@ Web Service, built from `backend/Dockerfile`.
    **Environment** tab (see [`.env.example`](../.env.example) for the full
    list and local-dev defaults):
    - `SECRET_KEY`
-   - `DATABASE_URL` / `DATABASE_URL_POOLED` (Neon Postgres)
+   - `DATABASE_URL` / `DATABASE_URL_POOLED` (Aiven Postgres)
    - `REDIS_URL` (Upstash)
    - `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`,
      `R2_BUCKET_NAME`, `R2_PUBLIC_URL`
    - `GROQ_API_KEY`
    - `RESEND_API_KEY`, `BREVO_API_KEY`
-   - `SENTRY_DSN` (optional)
    - `ALLOWED_ORIGINS` — the deployed Vercel frontend URL(s)
 
    `PORT`, `HOST`, and `ENVIRONMENT` are pre-set in `render.yaml`. The

@@ -1,4 +1,4 @@
-"""Health check endpoint — used by UptimeRobot to keep Fly.io + Neon warm."""
+"""Health check endpoint — used by UptimeRobot to keep Fly.io + Aiven warm."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ router = APIRouter()
 
 @router.get("/health", tags=["System"])
 async def health_check(db: AsyncSession = Depends(get_db)) -> dict[str, object]:
-    """Health check: verifies app is alive and warms Neon PostgreSQL."""
+    """Health check: verifies app is alive and warms Aiven PostgreSQL."""
     await db.execute(text("SELECT 1"))
     return {
         "status": "ok",

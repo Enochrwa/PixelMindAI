@@ -1,38 +1,9 @@
-# Local development stack — PostgreSQL + Redis + API + Web
-version: '3.9'
-
+# Local development stack — API + Worker only.
+# Postgres (Aiven) and Redis (Upstash) are hosted services — no local
+# containers for them. Both services load backend/.env directly, so the
+# same .env file is used whether you run the backend via Docker or directly
+# with uvicorn/arq.
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: pixelmind_postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: pixelmind
-      POSTGRES_PASSWORD: pixelmind_dev
-      POSTGRES_DB: pixelmind
-    ports:
-      - '5432:5432'
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U pixelmind']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  redis:
-    image: redis:7-alpine
-    container_name: pixelmind_redis
-    restart: unless-stopped
-    ports:
-      - '6379:6379'
-    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
-    healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   api:
     build:
       context: ../../backend
@@ -41,18 +12,11 @@ services:
     restart: unless-stopped
     ports:
       - '8000:8000'
+    env_file:
+      - ../../backend/.env
     environment:
-      DATABASE_URL: postgresql+asyncpg://pixelmind:pixelmind_dev@postgres/pixelmind
-      DATABASE_URL_POOLED: postgresql+asyncpg://pixelmind:pixelmind_dev@postgres/pixelmind
-      REDIS_URL: redis://redis:6379
-      SECRET_KEY: dev-secret-key-change-in-production-32!
       ENVIRONMENT: development
       DEBUG: 'true'
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
     volumes:
       - ../../backend:/app
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
@@ -63,20 +27,11 @@ services:
       dockerfile: Dockerfile
     container_name: pixelmind_worker
     restart: unless-stopped
+    env_file:
+      - ../../backend/.env
     environment:
-      DATABASE_URL: postgresql+asyncpg://pixelmind:pixelmind_dev@postgres/pixelmind
-      DATABASE_URL_POOLED: postgresql+asyncpg://pixelmind:pixelmind_dev@postgres/pixelmind
-      REDIS_URL: redis://redis:6379
-      SECRET_KEY: dev-secret-key-change-in-production-32!
       ENVIRONMENT: development
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
     volumes:
       - ../../backend:/app
     command: python -m arq app.workers.worker.WorkerSettings
 
-volumes:
-  postgres_data:

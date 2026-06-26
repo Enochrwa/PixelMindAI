@@ -71,10 +71,14 @@ pixelmind-ai/
 
 ## 🚀 Quick Start (Local Dev)
 
+This backend connects to **hosted** Aiven PostgreSQL and Upstash Redis — no
+local database or cache containers are needed for either run mode below.
+
 ### Prerequisites
 - Node.js ≥ 20, pnpm ≥ 9
 - Python ≥ 3.11
-- Docker & Docker Compose
+- Docker & Docker Compose (only needed if you choose the Docker run mode)
+- An Aiven PostgreSQL service and an Upstash Redis database (free tiers work)
 
 ### 1. Clone
 
@@ -87,8 +91,9 @@ cd PixelMindAI
 
 ```bash
 cd backend
-cp .env.example .env   # fill in real values
-python3 -m pip install -r requirements.txt --break-system-packages
+cp .env.example .env
+# Fill in DATABASE_URL / DATABASE_URL_POOLED from the Aiven console,
+# and REDIS_URL from the Upstash console's "Redis" (TCP) tab — not the REST URL/token.
 cd ..
 ```
 
@@ -101,27 +106,33 @@ cp .env.example .env.local
 cd ..
 ```
 
-### 4. Start infrastructure
-
-```bash
-docker compose up -d postgres redis
-```
-
-### 5. Run database migrations
+### 4. Run database migrations (against Aiven)
 
 ```bash
 cd backend
+python3 -m pip install -r requirements.txt --break-system-packages
 alembic upgrade head
 cd ..
 ```
 
-### 6. Start dev servers
+### 5. Start the backend — pick one
+
+**Option A — Direct (uvicorn):**
+```bash
+cd backend && uvicorn main:app --reload
+```
+
+**Option B — Docker:**
+```bash
+docker compose -f infra/docker/docker-compose.yml up -d --build
+# or from the repo root: docker compose up -d --build
+```
+Both the `api` and `worker` containers load `backend/.env` directly, so
+there's nothing extra to configure for Docker.
+
+### 6. Start the frontend
 
 ```bash
-# Terminal 1 — backend
-cd backend && uvicorn main:app --reload
-
-# Terminal 2 — frontend
 cd frontend && pnpm dev
 ```
 
@@ -129,15 +140,16 @@ cd frontend && pnpm dev
 - **Web:** http://localhost:5173
 - **API Docs:** http://localhost:8000/docs (development only)
 
-> Or run `./scripts/setup.sh` to do all of the above in one shot.
+> Or run `./scripts/setup.sh` to do steps 2–4 in one shot.
 
 ## 🛠️ Tech Stack
+
 
 | Layer | Technology |
 |-------|-----------|
 | Frontend | React 18 + Vite + TypeScript (strict) + Tailwind CSS |
 | API | FastAPI + Python 3.11 + Pydantic v2 |
-| Database | PostgreSQL via Neon (free) — SQLAlchemy async + Alembic |
+| Database | PostgreSQL via Aiven (free tier) — SQLAlchemy async + Alembic |
 | Cache / Queue | Upstash Redis + ARQ async workers |
 | File Storage | Cloudflare R2 (10GB free, zero egress) |
 | CV Inference | OpenCV + ONNX Runtime + MediaPipe + rembg (U2Net) |

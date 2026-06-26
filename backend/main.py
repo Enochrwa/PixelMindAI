@@ -5,21 +5,12 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-import sentry_sdk
 
 from app.api.v1.endpoints import auth, files, health, jobs
 from app.api.v1.endpoints.tools import router as tools_router
 from app.core.config import settings
 from app.core.errors import register_exception_handlers
 from app.middleware.rate_limit import RateLimitMiddleware
-
-# === Sentry (noop if DSN is empty) ===
-if settings.SENTRY_DSN:
-    sentry_sdk.init(
-        dsn=settings.SENTRY_DSN,
-        environment=settings.ENVIRONMENT,
-        traces_sample_rate=0.1,
-    )
 
 
 def create_app() -> FastAPI:

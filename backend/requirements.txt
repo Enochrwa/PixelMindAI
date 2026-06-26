@@ -29,7 +29,6 @@ mediapipe>=0.10.18
 rembg>=2.0.57
 groq>=0.11.0
 resend>=2.4.0
-sentry-sdk[fastapi]>=2.18.0
 structlog>=24.4.0
 orjson>=3.10.0
 python-slugify>=8.0.4

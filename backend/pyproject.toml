@@ -62,9 +62,6 @@ dependencies = [
     # === Async Jobs & Email ===
     "resend>=2.4.0",
 
-    # === Error Tracking ===
-    "sentry-sdk[fastapi]>=2.18.0",
-
     # === Utilities ===
     "structlog>=24.4.0",
     "orjson>=3.10.0",
