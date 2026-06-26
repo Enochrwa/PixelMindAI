@@ -45,7 +45,7 @@ class InvoiceReader:
     def _process_pdf(self, pdf_bytes: bytes) -> dict[str, Any]:
         """Handle multi-page PDF by extracting text per page."""
         try:
-            import pdfplumber  # type: ignore[import-untyped]
+            import pdfplumber
 
             full_text = ""
             with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:

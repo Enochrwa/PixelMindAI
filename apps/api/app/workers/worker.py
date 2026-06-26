@@ -158,7 +158,7 @@ async def process_business_card_scanner(
 class WorkerSettings:
     """ARQ WorkerSettings for PixelMind AI job queue."""
 
-    functions: ClassVar[list] = [
+    functions: ClassVar[list[object]] = [
         process_receipt_scanner,
         process_invoice_reader,
         process_business_card_scanner,

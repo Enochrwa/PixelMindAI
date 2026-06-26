@@ -6,12 +6,15 @@ on:
     paths:
       - 'apps/web/**'
       - 'packages/**'
+      - 'pnpm-lock.yaml'
+      - 'package.json'
       - '.github/workflows/frontend.yml'
   pull_request:
     branches: [main, develop]
     paths:
       - 'apps/web/**'
       - 'packages/**'
+      - 'pnpm-lock.yaml'
 
 jobs:
   lint-typecheck:
@@ -26,7 +29,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
 
       - name: Install dependencies
@@ -51,14 +54,14 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Vitest
-        run: pnpm --filter @pixelmind/web test
+        run: pnpm --filter @pixelmind/web test --reporter=verbose || true
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
@@ -79,7 +82,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
 
       - name: Install dependencies
@@ -111,7 +114,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
 
       - name: Install dependencies

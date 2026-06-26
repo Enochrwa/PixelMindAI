@@ -49,7 +49,8 @@ class ReceiptScanner:
 
         ocr_result = self._ocr.extract_text(img)
         text: str = str(ocr_result.get("text", ""))
-        confidence: int = int(ocr_result.get("confidence", 0))
+        _raw_conf = ocr_result.get("confidence", 0)
+        confidence: int = int(_raw_conf) if isinstance(_raw_conf, (int, float)) else 0
 
         currency = self._detect_currency(text)
         line_items = self._extract_line_items(text)

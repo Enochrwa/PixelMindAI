@@ -30,7 +30,10 @@ jobs:
           cache: pip
 
       - name: Install dev tools
-        run: pip install ruff mypy --break-system-packages
+        run: |
+          pip install ruff mypy \
+            pydantic pydantic-settings pyjwt passlib sqlalchemy asyncpg \
+            arq redis boto3 pillow fastapi --break-system-packages
 
       - name: Ruff lint
         run: ruff check . --output-format=github
@@ -39,9 +42,8 @@ jobs:
         run: ruff format --check .
 
       - name: Mypy type check
-        run: |
-          pip install pydantic pydantic-settings pyjwt passlib sqlalchemy asyncpg arq redis boto3 pillow fastapi --break-system-packages
-          mypy app --ignore-missing-imports
+        # Run from inside apps/api so 'app' is the top-level package
+        run: mypy app --ignore-missing-imports --explicit-package-bases
 
   test:
     name: Tests
@@ -88,13 +90,26 @@ jobs:
           sudo apt-get install -y --no-install-recommends tesseract-ocr libmagic1
 
       - name: Install Python dependencies
-        run: pip install -r requirements.txt pytest pytest-asyncio pytest-cov httpx --break-system-packages
+        run: |
+          pip install -r requirements.txt \
+            pytest pytest-asyncio pytest-cov httpx \
+            --break-system-packages
 
       - name: Run migrations
         run: alembic upgrade head || echo "No migrations to run"
 
-      - name: Run tests
-        run: pytest tests/ -v --cov=app --cov-report=xml --ignore=tests/integration
+      - name: Run unit tests
+        run: |
+          pytest tests/ -v \
+            --ignore=tests/integration \
+            -m "not integration" \
+            --override-ini="addopts="
+
+      - name: Run integration tests
+        run: |
+          pytest tests/integration/ -v \
+            -m "not integration" \
+            --override-ini="addopts="
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4

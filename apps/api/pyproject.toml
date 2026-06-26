@@ -132,6 +132,7 @@ docstring-code-format = true
 
 [tool.mypy]
 python_version = "3.11"
+explicit_package_bases = true
 strict = true
 warn_return_any = true
 warn_unused_configs = true
@@ -140,13 +141,15 @@ disallow_any_generics = true
 no_implicit_optional = true
 warn_redundant_casts = true
 warn_unused_ignores = true
-ignore_missing_imports = false
+ignore_missing_imports = true
 plugins = ["pydantic.mypy", "sqlalchemy.ext.mypy.plugin"]
 
 [[tool.mypy.overrides]]
 module = [
     "easyocr.*",
     "cv2.*",
+    "pytesseract.*",
+    "pdfplumber.*",
     "mediapipe.*",
     "rembg.*",
     "boto3.*",

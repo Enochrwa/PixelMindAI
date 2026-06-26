@@ -16,10 +16,13 @@ class ImagePreprocessor:
     @staticmethod
     def load_image(source: bytes | str) -> np.ndarray:
         """Load an image from bytes or URL into a BGR numpy array."""
+        raw: bytes
         if isinstance(source, str):
             with urllib.request.urlopen(source) as resp:  # noqa: S310
-                source = resp.read()
-        pil = Image.open(io.BytesIO(source)).convert("RGB")
+                raw = resp.read()
+        else:
+            raw = source
+        pil = Image.open(io.BytesIO(raw)).convert("RGB")
         return cv2.cvtColor(np.array(pil), cv2.COLOR_RGB2BGR)
 
     @staticmethod

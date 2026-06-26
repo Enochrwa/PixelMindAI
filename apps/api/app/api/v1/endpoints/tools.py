@@ -260,7 +260,7 @@ async def export_result(
     result_data: dict[str, Any] = job.result_json or {}
 
     if format == "json":
-        return result_data  # type: ignore[return-value]
+        return result_data
 
     if format == "csv":
         if slug == "receipt-scanner":

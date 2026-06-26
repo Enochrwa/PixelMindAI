@@ -1,14 +1,14 @@
 """Multi-engine OCR abstraction with auto-fallback (S1-01).
 
 Primary: EasyOCR (best multi-language + handwriting)
-Secondary: PaddleOCR (better structured tables)
-Tertiary: pytesseract (fastest for clean printed text)
+Secondary: pytesseract (fastest for clean printed text)
 """
 
 from __future__ import annotations
 
 import io
 import logging
+from typing import Any
 
 import numpy as np
 from PIL import Image
@@ -18,20 +18,32 @@ logger = logging.getLogger(__name__)
 SUPPORTED_LANGS = {"en", "fr"}
 
 
+class _EasyOCRReader:
+    """Thin typed wrapper so mypy is happy with the dynamic reader."""
+
+    def __init__(self, languages: list[str]) -> None:
+        import easyocr
+
+        self._reader = easyocr.Reader(languages, gpu=False, verbose=False)
+
+    def readtext(self, image: np.ndarray) -> list[Any]:
+        return self._reader.readtext(image)  # type: ignore[no-any-return]
+
+
 class OCREngine:
-    """Routes OCR to EasyOCR → PaddleOCR → Tesseract with auto-fallback."""
+    """Routes OCR to EasyOCR → Tesseract with auto-fallback."""
 
     def __init__(self, languages: list[str] | None = None) -> None:
         self.languages = [lang for lang in (languages or ["en"]) if lang in SUPPORTED_LANGS]
         if not self.languages:
             self.languages = ["en"]
-        self._easyocr: object | None = None
+        self._easyocr: _EasyOCRReader | None = None
 
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
 
-    def extract_text(self, image: np.ndarray | bytes) -> dict[str, object]:
+    def extract_text(self, image: np.ndarray | bytes) -> dict[str, Any]:
         """Extract text from image.
 
         Returns:
@@ -57,7 +69,6 @@ class OCREngine:
         try:
             result = self.extract_text(image)
             text = str(result.get("text", ""))
-            # Simple heuristic: check for non-ASCII characters
             non_ascii = sum(1 for c in text if ord(c) > 127)
             if non_ascii / max(len(text), 1) > 0.3:
                 return "fr"
@@ -69,33 +80,33 @@ class OCREngine:
     # Internal engines
     # ------------------------------------------------------------------
 
-    def _get_easyocr(self) -> object:
+    def _get_easyocr(self) -> _EasyOCRReader:
         if self._easyocr is None:
-            import easyocr  # type: ignore[import-untyped]
-
-            self._easyocr = easyocr.Reader(self.languages, gpu=False, verbose=False)
+            self._easyocr = _EasyOCRReader(self.languages)
         return self._easyocr
 
-    def _easyocr_extract(self, image: np.ndarray) -> dict[str, object]:
+    def _easyocr_extract(self, image: np.ndarray) -> dict[str, Any]:
         reader = self._get_easyocr()
-        results = reader.readtext(image)  # type: ignore[attr-defined]
+        results = reader.readtext(image)
         words = [{"text": r[1], "confidence": float(r[2]), "bbox": r[0]} for r in results]
-        full_text = "\n".join(w["text"] for w in words)
-        avg_conf = sum(w["confidence"] for w in words) / len(words) if words else 0.0
+        full_text = "\n".join(str(w["text"]) for w in words)
+        avg_conf = sum(float(w["confidence"]) for w in words) / len(words) if words else 0.0
         return {"text": full_text, "words": words, "confidence": round(avg_conf * 100)}
 
-    def _tesseract_fallback(self, image: np.ndarray) -> dict[str, object]:
+    def _tesseract_fallback(self, image: np.ndarray) -> dict[str, Any]:
         """Tesseract fallback via pytesseract."""
-        import pytesseract  # type: ignore[import-untyped]
+        import pytesseract
 
         lang_code = "+".join(self.languages)
-        text = pytesseract.image_to_string(image, lang=lang_code)
-        data = pytesseract.image_to_data(image, lang=lang_code, output_type=pytesseract.Output.DICT)
-        words = []
+        text: str = pytesseract.image_to_string(image, lang=lang_code)
+        data: dict[str, Any] = pytesseract.image_to_data(
+            image, lang=lang_code, output_type=pytesseract.Output.DICT
+        )
+        words: list[dict[str, Any]] = []
         for i, word in enumerate(data.get("text", [])):
-            if word.strip():
+            if str(word).strip():
                 conf = float(data["conf"][i])
                 if conf > 0:
                     words.append({"text": word, "confidence": conf / 100.0, "bbox": []})
-        avg_conf = sum(w["confidence"] for w in words) / len(words) if words else 0.5
+        avg_conf = sum(float(w["confidence"]) for w in words) / len(words) if words else 0.5
         return {"text": text.strip(), "words": words, "confidence": round(avg_conf * 100)}
