@@ -93,7 +93,8 @@ class ImagePreprocessor:
     @staticmethod
     def to_png_bytes(img: np.ndarray) -> bytes:
         """Encode a BGR numpy array to PNG bytes."""
-        success, buffer = cv2.imencode(".png", img)
-        if not success:
+        ok, buf = cv2.imencode(".png", img)
+        if not ok:
             raise RuntimeError("Failed to encode image to PNG")
-        return buffer.tobytes()
+        # cv2.imencode buffer is a numpy array; .tobytes() always returns bytes
+        return bytes(buf)

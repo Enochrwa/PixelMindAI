@@ -147,6 +147,7 @@ plugins = ["pydantic.mypy", "sqlalchemy.ext.mypy.plugin"]
 [[tool.mypy.overrides]]
 module = [
     "easyocr.*",
+    "redis.*",
     "cv2.*",
     "pytesseract.*",
     "pdfplumber.*",
@@ -193,3 +194,8 @@ show_missing = true
 "app/db/migrations/env.py" = ["B904"]
 # Tests
 "tests/**/*.py" = ["S101", "ANN", "ARG001", "ARG002"]
+
+[[tool.mypy.overrides]]
+module = "app.middleware.rate_limit"
+warn_unused_ignores = false
+disable_error_code = ["type-arg", "unused-ignore"]

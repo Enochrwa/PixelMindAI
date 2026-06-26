@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 import uuid
 
 import boto3
@@ -14,7 +15,7 @@ class R2Client:
     """Thread-safe Cloudflare R2 client wrapping boto3."""
 
     def __init__(self) -> None:
-        self._client = boto3.client(
+        self._client: Any = boto3.client(
             "s3",
             endpoint_url=f"https://{settings.R2_ACCOUNT_ID}.r2.cloudflarestorage.com",
             aws_access_key_id=settings.R2_ACCESS_KEY_ID,
@@ -41,11 +42,12 @@ class R2Client:
 
     def get_presigned_url(self, key: str, expires_in: int = 3600) -> str:
         """Generate a pre-signed GET URL."""
-        return self._client.generate_presigned_url(  # type: ignore[return-value]
+        url: str = self._client.generate_presigned_url(
             "get_object",
             Params={"Bucket": self.bucket, "Key": key},
             ExpiresIn=expires_in,
         )
+        return url
 
     def public_url(self, key: str) -> str:
         """Return the public CDN URL for a key."""
