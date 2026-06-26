@@ -194,6 +194,9 @@ show_missing = true
 "app/core/config.py" = ["S104"]
 # Migration runner
 "app/db/migrations/env.py" = ["B904"]
+# Auto-generated Alembic migrations — formatting follows alembic's own
+# template, not our style rules (long DDL lines, docstring punctuation, etc.)
+"app/db/migrations/versions/*.py" = ["E501", "D400", "D415", "W291", "ANN", "UP"]
 # Tests
 "tests/**/*.py" = ["S101", "ANN", "ARG001", "ARG002"]
 
