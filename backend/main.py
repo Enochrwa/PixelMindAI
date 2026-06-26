@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import uvicorn
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -15,6 +17,7 @@ from app.middleware.rate_limit import RateLimitMiddleware
 
 def create_app() -> FastAPI:
     """Application factory."""
+
     app = FastAPI(
         title=settings.APP_NAME,
         version=settings.APP_VERSION,
@@ -26,6 +29,7 @@ def create_app() -> FastAPI:
 
     # === Middleware ===
     app.add_middleware(GZipMiddleware, minimum_size=1000)
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.ALLOWED_ORIGINS,
@@ -33,6 +37,7 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
     app.add_middleware(RateLimitMiddleware)
 
     # === Error handlers ===
@@ -49,3 +54,12 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
+
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+    )
