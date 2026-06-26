@@ -73,3 +73,5 @@ playwright-report/
 # === Vercel ===
 .vercel/
 apps/web/.tsbuildinfo
+packages/**/tsconfig.tsbuildinfo
+packages/**/.tsbuildinfo

@@ -38,5 +38,6 @@
     "!(*lock).{json,yaml,yml,md}": [
       "prettier --write"
     ]
-  }
+  },
+  "packageManager": "pnpm@9.15.9"
 }
