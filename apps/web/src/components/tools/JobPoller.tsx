@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import type { Job } from '@/types';
 
 interface JobPollerProps {
   jobId: string;
-  onComplete: (result: unknown) => void;
+  onComplete: (result: Record<string, unknown>) => void;
   onError: (error: string) => void;
 }
 
@@ -13,7 +13,7 @@ const POLL_INTERVAL_MS = 2000;
 const MAX_POLLS = 90; // 3 minutes max
 
 export function JobPoller({ jobId, onComplete, onError }: JobPollerProps) {
-  const [pollCount, setPollCount] = useState(0);
+  const pollCount = useRef(0);
   const [statusMsg, setStatusMsg] = useState('Processing…');
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export function JobPoller({ jobId, onComplete, onError }: JobPollerProps) {
         const { data } = await api.get<Job>(`/jobs/${jobId}`);
 
         if (data.status === 'COMPLETED') {
-          if (!cancelled) onComplete(data.result);
+          if (!cancelled) onComplete(data.result as Record<string, unknown>);
           return;
         }
 
@@ -35,24 +35,25 @@ export function JobPoller({ jobId, onComplete, onError }: JobPollerProps) {
           return;
         }
 
-        setPollCount((c) => {
-          const next = c + 1;
-          if (next >= MAX_POLLS) {
-            onError('Processing timed out. Please try again.');
-            return c;
-          }
-          // Update status message with estimated progress
-          const pct = Math.min(Math.round((next / MAX_POLLS) * 100), 95);
-          setStatusMsg(`Processing… ${pct}%`);
-          timeoutId = setTimeout(() => { void poll(); }, POLL_INTERVAL_MS);
-          return next;
-        });
+        pollCount.current += 1;
+        if (pollCount.current >= MAX_POLLS) {
+          onError('Processing timed out. Please try again.');
+          return;
+        }
+
+        const pct = Math.min(Math.round((pollCount.current / MAX_POLLS) * 100), 95);
+        setStatusMsg(`Processing… ${pct}%`);
+        timeoutId = setTimeout(() => {
+          void poll();
+        }, POLL_INTERVAL_MS);
       } catch {
         if (!cancelled) onError('Failed to check job status');
       }
     };
 
-    timeoutId = setTimeout(() => { void poll(); }, POLL_INTERVAL_MS);
+    timeoutId = setTimeout(() => {
+      void poll();
+    }, POLL_INTERVAL_MS);
 
     return () => {
       cancelled = true;

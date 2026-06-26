@@ -1,6 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import {
+  ReceiptResultPanel,
+  InvoiceResultPanel,
+  BusinessCardResultPanel,
+} from '@/components/tools/ResultPanels';
+import { FileDropzone } from '@/components/tools/FileDropzone';
 
 // Mock api module
 vi.mock('@/lib/api', () => ({
@@ -22,7 +28,6 @@ vi.mock('react-dropzone', () => ({
 
 describe('ReceiptResultPanel', () => {
   it('renders merchant name', () => {
-    const { ReceiptResultPanel } = await import('@/components/tools/ResultPanels');
     const result = {
       merchant: 'Test Market',
       date: '2024-06-15',
@@ -44,8 +49,7 @@ describe('ReceiptResultPanel', () => {
 });
 
 describe('BusinessCardResultPanel', () => {
-  it('renders contact name and email', async () => {
-    const { BusinessCardResultPanel } = await import('@/components/tools/ResultPanels');
+  it('renders contact name and email', () => {
     const result = {
       full_name: 'Alice Mutoni',
       job_title: 'Software Engineer',
@@ -68,16 +72,14 @@ describe('BusinessCardResultPanel', () => {
 });
 
 describe('FileDropzone', () => {
-  it('renders drop zone text', async () => {
-    const { FileDropzone } = await import('@/components/tools/FileDropzone');
+  it('renders drop zone text', () => {
     render(<FileDropzone onFileDrop={vi.fn()} />);
     expect(screen.getByText(/drag & drop/i)).toBeDefined();
   });
 });
 
 describe('InvoiceResultPanel', () => {
-  it('renders invoice number', async () => {
-    const { InvoiceResultPanel } = await import('@/components/tools/ResultPanels');
+  it('renders invoice number', () => {
     const result = {
       invoice_number: 'INV-001',
       supplier_name: 'Supplier Co',

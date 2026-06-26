@@ -15,6 +15,9 @@ export interface User {
   created_at: string;
 }
 
+/** @deprecated use TokenResponse */
+export type AuthTokens = TokenResponse;
+
 export interface TokenResponse {
   access_token: string;
   refresh_token: string;

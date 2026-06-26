@@ -2,7 +2,7 @@
  * Sprint 1 result panels: Receipt, Invoice, Business Card (S1-07)
  */
 
-import { Download, Copy, CheckCircle, User, Mail, Phone, Globe, MapPin, Briefcase } from 'lucide-react';
+import { Download, Copy, CheckCircle, User, Mail, Phone, Globe, MapPin } from 'lucide-react';
 import { useState } from 'react';
 import { api } from '@/lib/api';
 

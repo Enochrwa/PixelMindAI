@@ -3,7 +3,7 @@
  * Sprint 1 adds specialized ResultPanels for OCR tools.
  */
 import { useParams } from 'react-router-dom';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, type ReactNode } from 'react';
 import { CheckCircle, AlertCircle, RotateCcw } from 'lucide-react';
 import { FileDropzone } from '@/components/tools/FileDropzone';
 import { JobPoller } from '@/components/tools/JobPoller';
@@ -36,7 +36,7 @@ const TOOL_META: Record<string, { name: string; description: string; credits: nu
   },
 };
 
-function renderResult(slug: string, result: unknown, jobId: string) {
+function renderResult(slug: string, result: Record<string, unknown>, jobId: string): ReactNode {
   if (slug === 'receipt-scanner') {
     return <ReceiptResultPanel result={result as never} jobId={jobId} />;
   }
@@ -58,7 +58,7 @@ export function ToolPage() {
   const { slug = '' } = useParams<{ slug: string }>();
   const [phase, setPhase] = useState<Phase>('idle');
   const [jobId, setJobId] = useState('');
-  const [result, setResult] = useState<unknown>(null);
+  const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [filePreview, setFilePreview] = useState<string | null>(null);
 
@@ -102,7 +102,7 @@ export function ToolPage() {
     [slug]
   );
 
-  const handleComplete = useCallback((res: unknown) => {
+  const handleComplete = useCallback((res: Record<string, unknown>) => {
     setResult(res);
     setPhase('done');
   }, []);
