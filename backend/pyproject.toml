@@ -62,9 +62,6 @@ dependencies = [
     # === Async Jobs & Email ===
     "resend>=2.4.0",
 
-    # === Error Tracking ===
-    "sentry-sdk[fastapi]>=2.18.0",
-
     # === Utilities ===
     "structlog>=24.4.0",
     "orjson>=3.10.0",
@@ -197,6 +194,9 @@ show_missing = true
 "app/core/config.py" = ["S104"]
 # Migration runner
 "app/db/migrations/env.py" = ["B904"]
+# Auto-generated Alembic migrations — formatting follows alembic's own
+# template, not our style rules (long DDL lines, docstring punctuation, etc.)
+"app/db/migrations/versions/*.py" = ["E501", "D400", "D415", "W291", "ANN", "UP"]
 # Tests
 "tests/**/*.py" = ["S101", "ANN", "ARG001", "ARG002"]
 

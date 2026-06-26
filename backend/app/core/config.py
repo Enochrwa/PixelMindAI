@@ -5,7 +5,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -30,14 +30,24 @@ class Settings(BaseSettings):
     # === Server ===
     HOST: str = "0.0.0.0"
     PORT: int = 8000
-    ALLOWED_ORIGINS: list[str] = ["http://localhost:5173", "https://pixelmind.vercel.app"]
+    # NOTE: stored as a raw string and exposed as a list via the
+    # `ALLOWED_ORIGINS` property below. pydantic-settings tries to JSON-decode
+    # any field typed as list[...] when reading from .env/the environment,
+    # which breaks on a plain comma-separated string like
+    # "http://localhost:5173,https://pixelmind.vercel.app". Keeping the raw
+    # field as `str` avoids that, while the property keeps call sites
+    # (e.g. main.py's `allow_origins=settings.ALLOWED_ORIGINS`) unchanged.
+    ALLOWED_ORIGINS_RAW: str = Field(
+        default="http://localhost:5173,https://pixelmind.vercel.app",
+        alias="ALLOWED_ORIGINS",
+    )
 
     # === Auth ===
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
     ALGORITHM: str = "HS256"
 
-    # === Database (Neon PostgreSQL) ===
+    # === Database (Aiven PostgreSQL) ===
     DATABASE_URL: str = Field(default="postgresql+asyncpg://user:pass@localhost/pixelmind")
     DATABASE_URL_POOLED: str = Field(
         default="postgresql+asyncpg://user:pass@localhost/pixelmind?pgbouncer=true"
@@ -45,7 +55,13 @@ class Settings(BaseSettings):
     DB_ECHO: bool = False
 
     # === Redis (Upstash) ===
+    # REDIS_URL must be the Redis/TCP protocol URL (redis:// or rediss://),
+    # used by arq and redis.asyncio. Get it from the Upstash console "Redis" tab.
     REDIS_URL: str = Field(default="redis://localhost:6379")
+    # Optional: Upstash REST API credentials, kept for any future HTTP-based
+    # usage. Not used by the current arq / redis.asyncio code paths.
+    UPSTASH_REDIS_REST_URL: str = ""
+    UPSTASH_REDIS_REST_TOKEN: str = ""
 
     # === Cloudflare R2 Storage ===
     R2_ACCOUNT_ID: str = ""
@@ -67,9 +83,6 @@ class Settings(BaseSettings):
     BREVO_SMTP_HOST: str = "smtp-relay.brevo.com"
     BREVO_SMTP_PORT: int = 587
 
-    # === Sentry ===
-    SENTRY_DSN: str = ""
-
     # === File Upload ===
     MAX_UPLOAD_SIZE_MB: int = 25
     ALLOWED_MIME_TYPES: list[str] = [
@@ -89,13 +102,10 @@ class Settings(BaseSettings):
     RATE_LIMIT_FREE: int = 200
     RATE_LIMIT_PAID: int = 1000
 
-    @field_validator("ALLOWED_ORIGINS", mode="before")
-    @classmethod
-    def parse_cors(cls, v: str | list[str]) -> list[str]:
-        """Parse CORS origins from comma-separated string or list."""
-        if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",")]
-        return v
+    @property
+    def ALLOWED_ORIGINS(self) -> list[str]:  # noqa: N802 (kept upper-case to match prior public API)
+        """CORS origins, parsed from the comma-separated ALLOWED_ORIGINS env var."""
+        return [origin.strip() for origin in self.ALLOWED_ORIGINS_RAW.split(",") if origin.strip()]
 
 
 @lru_cache
