@@ -33,7 +33,7 @@ jobs:
         run: |
           pip install ruff mypy \
             pydantic pydantic-settings pyjwt passlib sqlalchemy asyncpg \
-            arq redis boto3 pillow fastapi --break-system-packages
+            arq redis boto3 pillow fastapi email-validator --break-system-packages
 
       - name: Ruff lint
         run: ruff check . --output-format=github
@@ -93,6 +93,7 @@ jobs:
         run: |
           pip install -r requirements.txt \
             pytest pytest-asyncio pytest-cov httpx \
+            email-validator \
             --break-system-packages
 
       - name: Run migrations

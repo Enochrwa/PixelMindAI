@@ -16,6 +16,7 @@ dependencies = [
 
     # === Config & Validation ===
     "pydantic>=2.10.0",
+    "email-validator>=2.1.0",
     "pydantic-settings>=2.6.0",
 
     # === Auth ===
