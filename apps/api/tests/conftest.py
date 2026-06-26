@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator
+from typing import TYPE_CHECKING
 
-import pytest
-import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
+import pytest_asyncio
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
 
 
 @pytest_asyncio.fixture

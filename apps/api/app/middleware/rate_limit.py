@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 import time
+from typing import TYPE_CHECKING
 
 import redis.asyncio as aioredis
-from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import JSONResponse, Response
 
 from app.core.config import settings
+
+if TYPE_CHECKING:
+    from fastapi import Request
 
 EXEMPT_PATHS = {"/health", "/docs", "/openapi.json", "/redoc"}
 

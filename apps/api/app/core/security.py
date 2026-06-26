@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 import secrets
-from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import jwt
@@ -28,7 +28,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def create_access_token(subject: str | Any, expires_delta: timedelta | None = None) -> str:
     """Create a JWT access token."""
-    expire = datetime.now(timezone.utc) + (
+    expire = datetime.now(UTC) + (
         expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     )
     payload: dict[str, Any] = {"sub": str(subject), "exp": expire, "type": "access"}
@@ -37,7 +37,7 @@ def create_access_token(subject: str | Any, expires_delta: timedelta | None = No
 
 def create_refresh_token(subject: str | Any) -> tuple[str, str]:
     """Create a JWT refresh token. Returns (token, token_hash) for storage."""
-    expire = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    expire = datetime.now(UTC) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     jti = secrets.token_hex(32)
     payload: dict[str, Any] = {
         "sub": str(subject),

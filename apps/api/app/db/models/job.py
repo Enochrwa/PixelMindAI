@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
@@ -12,6 +11,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.models.base import Base, TimestampMixin, UUIDMixin
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from app.db.models.user import User
 
 

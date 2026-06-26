@@ -1,4 +1,4 @@
-"""Reusable OpenCV image preprocessing pipeline used by all CV tools."""
+"""Reusable OpenCV image preprocessing pipeline used by ALL CV tools (S1-02)."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ class ImagePreprocessor:
     def load_image(source: bytes | str) -> np.ndarray:
         """Load an image from bytes or URL into a BGR numpy array."""
         if isinstance(source, str):
-            with urllib.request.urlopen(source) as resp:
+            with urllib.request.urlopen(source) as resp:  # noqa: S310
                 source = resp.read()
         pil = Image.open(io.BytesIO(source)).convert("RGB")
         return cv2.cvtColor(np.array(pil), cv2.COLOR_RGB2BGR)
@@ -37,14 +37,18 @@ class ImagePreprocessor:
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
         coords = np.column_stack(np.where(binary > 0))
+        if len(coords) == 0:
+            return img
         angle = cv2.minAreaRect(coords)[-1]
         if angle < -45:
             angle = 90 + angle
         if abs(angle) < 0.5:
             return img
         h, w = img.shape[:2]
-        M = cv2.getRotationMatrix2D((w // 2, h // 2), angle, 1.0)
-        return cv2.warpAffine(img, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
+        rotation_matrix = cv2.getRotationMatrix2D((w // 2, h // 2), angle, 1.0)
+        return cv2.warpAffine(
+            img, rotation_matrix, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE
+        )
 
     @staticmethod
     def denoise(img: np.ndarray) -> np.ndarray:
@@ -57,6 +61,31 @@ class ImagePreprocessor:
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         return thresh
+
+    @staticmethod
+    def detect_orientation(img: np.ndarray) -> float:
+        """Return the estimated rotation angle of text in image."""
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+        coords = np.column_stack(np.where(binary > 0))
+        if len(coords) < 10:
+            return 0.0
+        angle = cv2.minAreaRect(coords)[-1]
+        if angle < -45:
+            angle = 90 + angle
+        return float(angle)
+
+    @staticmethod
+    def rotate_to_upright(img: np.ndarray) -> np.ndarray:
+        """Rotate image to upright orientation."""
+        angle = ImagePreprocessor.detect_orientation(img)
+        if abs(angle) < 0.5:
+            return img
+        h, w = img.shape[:2]
+        rotation_matrix = cv2.getRotationMatrix2D((w // 2, h // 2), angle, 1.0)
+        return cv2.warpAffine(
+            img, rotation_matrix, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE
+        )
 
     @staticmethod
     def to_png_bytes(img: np.ndarray) -> bytes:

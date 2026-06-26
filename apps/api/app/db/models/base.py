@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 import uuid
-from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, String, func
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 
 class Base(DeclarativeBase):

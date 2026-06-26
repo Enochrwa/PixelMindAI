@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from arq import create_pool
 from arq.connections import ArqRedis, RedisSettings
 
 from app.core.config import settings
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 def _redis_settings() -> RedisSettings:

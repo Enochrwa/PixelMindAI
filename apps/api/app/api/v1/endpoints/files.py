@@ -2,20 +2,24 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING
 
-import magic
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+import magic
 from PIL import Image
 from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.storage import r2
 from app.db.models.job import UploadedFile
 from app.db.session import get_db
 from app.utils.auth_deps import get_current_user
-from app.db.models.user import User
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.db.models.user import User
 
 router = APIRouter(prefix="/files", tags=["Files"])
 
@@ -53,6 +57,7 @@ async def upload_file(
     if detected_mime != "application/pdf":
         try:
             import io
+
             img = Image.open(io.BytesIO(file_bytes))
             img.verify()
         except Exception as exc:
@@ -61,7 +66,7 @@ async def upload_file(
     # Upload to R2
     r2_key = r2.upload_file(file_bytes, detected_mime)
 
-    expires_at = datetime.now(timezone.utc) + timedelta(hours=settings.FREE_FILE_RETENTION_HOURS)
+    expires_at = datetime.now(UTC) + timedelta(hours=settings.FREE_FILE_RETENTION_HOURS)
 
     uploaded = UploadedFile(
         user_id=current_user.id,

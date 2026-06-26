@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.security import (
@@ -18,6 +17,9 @@ from app.core.security import (
 )
 from app.db.models.user import User
 from app.db.session import get_db
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -51,9 +53,7 @@ async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db))
     """Register a new user and return token pair."""
     # Check uniqueness
     existing = await db.execute(
-        select(User).where(
-            (User.email == payload.email) | (User.username == payload.username)
-        )
+        select(User).where((User.email == payload.email) | (User.username == payload.username))
     )
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=409, detail="Email or username already registered")
@@ -82,7 +82,11 @@ async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)) -> To
     result = await db.execute(select(User).where(User.email == payload.email))
     user = result.scalar_one_or_none()
 
-    if not user or not user.hashed_password or not verify_password(payload.password, user.hashed_password):
+    if (
+        not user
+        or not user.hashed_password
+        or not verify_password(payload.password, user.hashed_password)
+    ):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     access_token = create_access_token(user.id)
