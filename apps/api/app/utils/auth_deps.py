@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
-import jwt
+from typing import TYPE_CHECKING
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+import jwt
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import decode_token
 from app.db.models.user import User
 from app.db.session import get_db
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 bearer_scheme = HTTPBearer()
 
@@ -31,7 +35,7 @@ async def get_current_user(
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid token type")
 
     user_id = payload.get("sub")
-    result = await db.execute(select(User).where(User.id == user_id, User.is_active == True))
+    result = await db.execute(select(User).where(User.id == user_id, User.is_active))
     user = result.scalar_one_or_none()
 
     if not user:

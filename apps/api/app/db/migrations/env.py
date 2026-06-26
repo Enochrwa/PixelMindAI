@@ -4,17 +4,20 @@ from __future__ import annotations
 
 import asyncio
 from logging.config import fileConfig
+from typing import TYPE_CHECKING
 
 from alembic import context
 from sqlalchemy import pool
-from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from app.core.config import settings
 from app.db.models.base import Base
-from app.db.models.user import User  # noqa: F401
 from app.db.models.job import ProcessingJob, UploadedFile  # noqa: F401
 from app.db.models.tool import ToolCatalog  # noqa: F401
+from app.db.models.user import User  # noqa: F401
+
+if TYPE_CHECKING:
+    from sqlalchemy.engine import Connection
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)

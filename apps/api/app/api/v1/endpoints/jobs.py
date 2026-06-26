@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.job import ProcessingJob
 from app.db.session import get_db
 from app.utils.auth_deps import get_current_user
-from app.db.models.user import User
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.db.models.user import User
 
 router = APIRouter(prefix="/jobs", tags=["Jobs"])
 

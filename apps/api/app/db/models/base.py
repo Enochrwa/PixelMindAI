@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
+from datetime import datetime  # noqa: TC003  # SQLAlchemy Mapped[datetime] needs runtime import
 import uuid
-from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, String, func
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 

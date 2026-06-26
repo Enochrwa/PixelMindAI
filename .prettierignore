@@ -4,3 +4,4 @@ build
 .turbo
 *.lock
 pnpm-lock.yaml
+pnpm-lock.yaml

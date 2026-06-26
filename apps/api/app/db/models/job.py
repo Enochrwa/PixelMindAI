@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Any, TYPE_CHECKING
+from datetime import datetime  # noqa: TC003  # SQLAlchemy Mapped[datetime] needs runtime import
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB

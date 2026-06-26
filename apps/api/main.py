@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
-import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+import sentry_sdk
 
+from app.api.v1.endpoints import auth, files, health, jobs
+from app.api.v1.endpoints.tools import router as tools_router
 from app.core.config import settings
 from app.core.errors import register_exception_handlers
 from app.middleware.rate_limit import RateLimitMiddleware
-from app.api.v1.endpoints import health, auth, files, jobs
 
 # === Sentry (noop if DSN is empty) ===
 if settings.SENTRY_DSN:
@@ -27,9 +28,9 @@ def create_app() -> FastAPI:
         title=settings.APP_NAME,
         version=settings.APP_VERSION,
         description="The World's First Unified Visual Intelligence Operating System",
-        docs_url="/docs" if settings.DEBUG else None,
-        redoc_url="/redoc" if settings.DEBUG else None,
-        openapi_url="/openapi.json" if settings.DEBUG else None,
+        docs_url="/docs",
+        redoc_url="/redoc",
+        openapi_url="/openapi.json",
     )
 
     # === Middleware ===
@@ -51,6 +52,7 @@ def create_app() -> FastAPI:
     app.include_router(auth.router, prefix="/api/v1")
     app.include_router(files.router, prefix="/api/v1")
     app.include_router(jobs.router, prefix="/api/v1")
+    app.include_router(tools_router, prefix="/api/v1")
 
     return app
 

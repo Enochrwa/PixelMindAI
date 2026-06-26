@@ -2,7 +2,7 @@
   "name": "pixelmind-ai",
   "version": "0.1.0",
   "private": true,
-  "description": "PixelMind AI — The World's First Unified Visual Intelligence Operating System",
+  "description": "PixelMind AI \u2014 The World's First Unified Visual Intelligence Operating System",
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=9.0.0"
@@ -35,8 +35,9 @@
       "ruff check --fix",
       "ruff format"
     ],
-    "**/*.{json,yaml,yml,md}": [
+    "!(*lock).{json,yaml,yml,md}": [
       "prettier --write"
     ]
-  }
+  },
+  "packageManager": "pnpm@9.15.9"
 }

@@ -1,20 +1,47 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Auth
+// ─────────────────────────────────────────────────────────────────────────────
+
 export interface User {
   id: string;
   email: string;
   username: string;
   full_name: string | null;
   avatar_url: string | null;
-  plan: 'free' | 'starter' | 'pro' | 'enterprise';
+  plan: 'free' | 'starter' | 'professional' | 'business';
   credits_remaining: number;
+  is_active: boolean;
   is_verified: boolean;
   created_at: string;
 }
-export interface AuthTokens {
+
+/** @deprecated use TokenResponse */
+export type AuthTokens = TokenResponse;
+
+export interface TokenResponse {
   access_token: string;
   refresh_token: string;
   token_type: string;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Files
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface UploadedFile {
+  file_id: string;
+  original_url: string;
+  mime_type: string;
+  size_bytes: number;
+  expires_at: string;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Jobs
+// ─────────────────────────────────────────────────────────────────────────────
+
 export type JobStatus = 'QUEUED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+
 export interface Job {
   job_id: string;
   status: JobStatus;
@@ -24,23 +51,34 @@ export interface Job {
   credits_used: number;
   processing_time_ms: number | null;
 }
-export interface UploadedFile {
-  file_id: string;
-  original_url: string;
-  mime_type: string;
-  size_bytes: number;
-  expires_at: string;
+
+export interface ProcessResponse {
+  job_id: string;
+  status: string;
+  message: string;
 }
-export type ToolModule = 'ocr' | 'photo' | 'creator' | 'business' | 'agriculture' | 'entertainment';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tools
+// ─────────────────────────────────────────────────────────────────────────────
+
 export interface Tool {
   id: string;
   slug: string;
   name: string;
   description: string;
-  module: ToolModule;
+  module: string;
   credits_cost: number;
-  min_plan: 'free' | 'starter' | 'pro';
+  min_plan: string;
   is_active: boolean;
   is_novel: boolean;
   icon: string | null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// API errors
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface ApiError {
+  detail: string | { error: string; message?: string };
 }
