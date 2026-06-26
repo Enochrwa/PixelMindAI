@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime  # noqa: TC003  # SQLAlchemy Mapped[datetime] needs runtime import
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
@@ -11,8 +12,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.models.base import Base, TimestampMixin, UUIDMixin
 
 if TYPE_CHECKING:
-    from datetime import datetime
-
     from app.db.models.user import User
 
 

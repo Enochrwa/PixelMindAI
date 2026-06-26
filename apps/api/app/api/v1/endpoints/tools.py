@@ -11,7 +11,7 @@ import io
 from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy import select
 
@@ -232,14 +232,14 @@ async def process_business_card(
 # ------------------------------------------------------------------
 
 
-@router.get("/{slug}/export/{job_id}")
+@router.get("/{slug}/export/{job_id}", response_model=None)
 async def export_result(
     slug: str,
     job_id: str,
     format: str = Query(default="json", pattern="^(json|csv|vcf|qb_csv)$"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> StreamingResponse | dict[str, Any]:
+) -> JSONResponse | StreamingResponse:
     """Download the result of a completed job in the requested format."""
     if slug not in SPRINT_ONE_TOOLS:
         raise HTTPException(404, f"Tool {slug!r} not found")
@@ -260,7 +260,7 @@ async def export_result(
     result_data: dict[str, Any] = job.result_json or {}
 
     if format == "json":
-        return result_data
+        return JSONResponse(content=result_data)
 
     if format == "csv":
         if slug == "receipt-scanner":

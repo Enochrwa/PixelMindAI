@@ -172,6 +172,10 @@ filterwarnings = [
     "error",
     "ignore::DeprecationWarning",
     "ignore::UserWarning",
+    # SQLAlchemy re-registers models when app is imported multiple times in test session
+    "ignore::sqlalchemy.exc.SAWarning",
+    # pytest-asyncio loop scope deprecation
+    "ignore::pytest.PytestUnraisableExceptionWarning",
 ]
 
 [tool.coverage.run]

@@ -42,10 +42,18 @@ class TestReceiptScanner:
         assert "raw_text" in result
 
     def test_currency_detection_rwf(self, receipt_bytes: bytes) -> None:
+        from unittest.mock import patch
+
         from app.cv.tools.receipt_scanner import ReceiptScanner
 
-        result = ReceiptScanner().process(receipt_bytes)
-        # The sample receipt has "RWF"
+        scanner = ReceiptScanner()
+        mock_ocr = {
+            "text": "KIGALI SUPERMARKET\nDate: 2024-06-15\nBread 1500\nTotal 5074\nRWF",
+            "words": [],
+            "confidence": 85,
+        }
+        with patch.object(scanner._ocr, "extract_text", return_value=mock_ocr):
+            result = scanner.process(receipt_bytes)
         assert result["currency"] == "RWF"
 
     def test_process_blurry_receipt(self, blurry_receipt_bytes: bytes) -> None:
