@@ -43,8 +43,6 @@ dependencies = [
     "opencv-python-headless>=4.10.0",
     "numpy>=1.26.0",
     "pillow>=11.0.0",
-    "python-magic>=0.4.27",
-
     # === OCR Engines ===
     "easyocr>=1.7.2",
     "pytesseract>=0.3.13",
@@ -149,11 +147,9 @@ module = [
     "cv2.*",
     "pytesseract.*",
     "pdfplumber.*",
-    "mediapipe.*",
     "rembg.*",
     "boto3.*",
     "botocore.*",
-    "magic.*",
     "PIL.*",
     "arq.*",
     "passlib.*",
