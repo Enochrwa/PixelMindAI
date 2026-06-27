@@ -78,10 +78,7 @@ async def upload_file(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> FileUploadResponse:
-    """
-    Upload + validate an image or PDF;
-    store it on Cloudflare R2.
-    """
+    """Upload and validate an image or PDF; store it on Cloudflare R2."""
 
     file_bytes = await file.read()
 

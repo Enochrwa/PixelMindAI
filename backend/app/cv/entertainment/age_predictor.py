@@ -6,6 +6,7 @@ Predicts apparent age from face images using DeepFace or OpenCV DNN fallback.
 from __future__ import annotations
 
 import io
+import logging
 from typing import Any
 
 import cv2
@@ -13,6 +14,8 @@ import numpy as np
 from PIL import Image
 
 from app.cv.preprocessing import ImagePreprocessor
+
+logger = logging.getLogger(__name__)
 
 
 class AgePredictor:
@@ -26,6 +29,7 @@ class AgePredictor:
         # Try DeepFace first
         try:
             from deepface import DeepFace  # type: ignore[import]
+
             pil = Image.open(io.BytesIO(image_bytes)).convert("RGB")
             img_array = np.array(pil)
             result = DeepFace.analyze(
@@ -44,16 +48,20 @@ class AgePredictor:
                 "method": "deepface",
                 "confidence": 0.82,
             }
-        except (ImportError, Exception):
-            pass
+        except ImportError:
+            logger.debug("deepface not available, falling back to haar cascade")
+        except Exception:  # noqa: BLE001
+            logger.debug("deepface analysis failed, falling back to haar cascade")
 
-        # Fallback: OpenCV Haar Cascade face detection + DNN age estimation
+        # Fallback: OpenCV Haar Cascade face detection + heuristic age estimation
         img = self._pre.load_image(image_bytes)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         face_cascade = cv2.CascadeClassifier(
             cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
         )
-        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+        faces = face_cascade.detectMultiScale(
+            gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30)
+        )
 
         if len(faces) == 0:
             return {
@@ -69,7 +77,6 @@ class AgePredictor:
         x, y, w, h = max(faces, key=lambda f: f[2] * f[3])
         face_roi = img[y : y + h, x : x + w]
 
-        # Estimate age from basic features (skin tone histogram analysis)
         estimated_age = _estimate_age_heuristic(face_roi)
         return {
             "predicted_age": estimated_age,

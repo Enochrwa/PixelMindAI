@@ -21,8 +21,10 @@ class CaptionLens:
         pil = Image.open(io.BytesIO(image_bytes)).convert("RGB")
 
         try:
-            from transformers import BlipForConditionalGeneration, BlipProcessor  # type: ignore[import]
-            import torch  # type: ignore[import]
+            from transformers import (  # type: ignore[import]
+                BlipForConditionalGeneration,
+                BlipProcessor,
+            )
 
             processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
             model = BlipForConditionalGeneration.from_pretrained(
@@ -37,11 +39,12 @@ class CaptionLens:
                 "tags": [],
                 "confidence": 0.85,
             }
-        except (ImportError, Exception):
+        except (ImportError, Exception):  # noqa: BLE001
             # Fallback: basic image analysis
             img_array = np.array(pil)
             avg_brightness = float(np.mean(img_array))
-            dominant_channel = ["red", "green", "blue"][int(np.argmax(np.mean(img_array, axis=(0, 1))))]
+            channel_means = np.mean(img_array, axis=(0, 1))
+            dominant_channel = ["red", "green", "blue"][int(np.argmax(channel_means))]
             w, h = pil.size
             aspect = "landscape" if w > h else "portrait" if h > w else "square"
             caption = f"A {aspect} image with {dominant_channel}-dominant tones"

@@ -6,13 +6,15 @@ Counts products on retail shelves using object detection (YOLO or contour-based 
 from __future__ import annotations
 
 import io
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import cv2
-import numpy as np
 from PIL import Image
 
 from app.cv.preprocessing import ImagePreprocessor
+
+if TYPE_CHECKING:
+    import numpy as np
 
 
 class ShelfCounter:
