@@ -123,9 +123,7 @@ async def enqueue_job(
     func_name = func if isinstance(func, str) else func.__name__
 
     # Try Redis first
-    redis_job_id = await _try_enqueue_via_redis(
-        func_name, *args, _queue_name=_queue_name, **kwargs
-    )
+    redis_job_id = await _try_enqueue_via_redis(func_name, *args, _queue_name=_queue_name, **kwargs)
     if redis_job_id:
         logger.info("Enqueued %s via Redis (arq job_id=%s)", func_name, redis_job_id)
         return redis_job_id
