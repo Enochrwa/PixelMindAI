@@ -21,7 +21,7 @@ class CaptionLens:
         pil = Image.open(io.BytesIO(image_bytes)).convert("RGB")
 
         try:
-            from transformers import (  # type: ignore[import]
+            from transformers import (
                 BlipForConditionalGeneration,
                 BlipProcessor,
             )
