@@ -78,10 +78,7 @@ async def upload_file(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> FileUploadResponse:
-    """
-    Upload + validate an image or PDF;
-    store it on Cloudflare R2.
-    """
+    """Upload and validate an image or PDF; store it on Cloudflare R2."""
 
     file_bytes = await file.read()
 
@@ -111,10 +108,7 @@ async def upload_file(
         detected_mime,
     )
 
-    expires_at = (
-        datetime.now(UTC)
-        + timedelta(hours=settings.FREE_FILE_RETENTION_HOURS)
-    )
+    expires_at = datetime.now(UTC) + timedelta(hours=settings.FREE_FILE_RETENTION_HOURS)
 
     uploaded = UploadedFile(
         user_id=current_user.id,

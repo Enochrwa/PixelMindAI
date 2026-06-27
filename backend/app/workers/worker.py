@@ -56,7 +56,7 @@ async def _fetch_image(url: str) -> bytes:
 
 
 # ------------------------------------------------------------------
-# Sprint 1 Workers
+# Sprint 1 Workers — OCR Tools
 # ------------------------------------------------------------------
 
 
@@ -137,7 +137,6 @@ async def process_business_card_scanner(
             for url in file_urls:
                 images.append(await _fetch_image(url))
             results = scanner.process_bulk(images)
-            # Return merged results with bulk flag
             result = {"bulk": True, "count": len(results), "contacts": results}
 
         elapsed = int((time.time() - start) * 1000)
@@ -152,6 +151,161 @@ async def process_business_card_scanner(
 
 
 # ------------------------------------------------------------------
+# Photo Intelligence Workers
+# ------------------------------------------------------------------
+
+
+async def process_background_remover(
+    _ctx: dict[str, Any],
+    job_id: str,
+    file_url: str,
+) -> dict[str, Any]:
+    """Worker: remove background from image."""
+    start = time.time()
+    logger.info("background_remover.start", job_id=job_id)
+    await _update_job(job_id, "PROCESSING")
+
+    try:
+        image_bytes = await _fetch_image(file_url)
+        from app.cv.photo.background_remover import BackgroundRemover
+
+        result = BackgroundRemover().process(image_bytes)
+        elapsed = int((time.time() - start) * 1000)
+        await _update_job(job_id, "COMPLETED", result=result, elapsed_ms=elapsed)
+        logger.info("background_remover.done", job_id=job_id, ms=elapsed)
+        return result
+    except Exception as exc:
+        elapsed = int((time.time() - start) * 1000)
+        logger.error("background_remover.failed", job_id=job_id, error=str(exc))
+        await _update_job(job_id, "FAILED", error=str(exc), elapsed_ms=elapsed)
+        raise
+
+
+# ------------------------------------------------------------------
+# Creator Studio Workers
+# ------------------------------------------------------------------
+
+
+async def process_caption_lens(
+    _ctx: dict[str, Any],
+    job_id: str,
+    file_url: str,
+) -> dict[str, Any]:
+    """Worker: generate image caption."""
+    start = time.time()
+    logger.info("caption_lens.start", job_id=job_id)
+    await _update_job(job_id, "PROCESSING")
+
+    try:
+        image_bytes = await _fetch_image(file_url)
+        from app.cv.creator.caption_lens import CaptionLens
+
+        result = CaptionLens().process(image_bytes)
+        elapsed = int((time.time() - start) * 1000)
+        await _update_job(job_id, "COMPLETED", result=result, elapsed_ms=elapsed)
+        logger.info("caption_lens.done", job_id=job_id, ms=elapsed)
+        return result
+    except Exception as exc:
+        elapsed = int((time.time() - start) * 1000)
+        logger.error("caption_lens.failed", job_id=job_id, error=str(exc))
+        await _update_job(job_id, "FAILED", error=str(exc), elapsed_ms=elapsed)
+        raise
+
+
+# ------------------------------------------------------------------
+# Business Intel Workers
+# ------------------------------------------------------------------
+
+
+async def process_shelf_counter(
+    _ctx: dict[str, Any],
+    job_id: str,
+    file_url: str,
+) -> dict[str, Any]:
+    """Worker: count items on retail shelf."""
+    start = time.time()
+    logger.info("shelf_counter.start", job_id=job_id)
+    await _update_job(job_id, "PROCESSING")
+
+    try:
+        image_bytes = await _fetch_image(file_url)
+        from app.cv.business.shelf_counter import ShelfCounter
+
+        result = ShelfCounter().process(image_bytes)
+        elapsed = int((time.time() - start) * 1000)
+        await _update_job(job_id, "COMPLETED", result=result, elapsed_ms=elapsed)
+        logger.info("shelf_counter.done", job_id=job_id, ms=elapsed)
+        return result
+    except Exception as exc:
+        elapsed = int((time.time() - start) * 1000)
+        logger.error("shelf_counter.failed", job_id=job_id, error=str(exc))
+        await _update_job(job_id, "FAILED", error=str(exc), elapsed_ms=elapsed)
+        raise
+
+
+# ------------------------------------------------------------------
+# Agriculture AI Workers
+# ------------------------------------------------------------------
+
+
+async def process_plant_disease_detector(
+    _ctx: dict[str, Any],
+    job_id: str,
+    file_url: str,
+) -> dict[str, Any]:
+    """Worker: detect plant diseases."""
+    start = time.time()
+    logger.info("plant_disease_detector.start", job_id=job_id)
+    await _update_job(job_id, "PROCESSING")
+
+    try:
+        image_bytes = await _fetch_image(file_url)
+        from app.cv.agriculture.plant_disease_detector import PlantDiseaseDetector
+
+        result = PlantDiseaseDetector().process(image_bytes)
+        elapsed = int((time.time() - start) * 1000)
+        await _update_job(job_id, "COMPLETED", result=result, elapsed_ms=elapsed)
+        logger.info("plant_disease_detector.done", job_id=job_id, ms=elapsed)
+        return result
+    except Exception as exc:
+        elapsed = int((time.time() - start) * 1000)
+        logger.error("plant_disease_detector.failed", job_id=job_id, error=str(exc))
+        await _update_job(job_id, "FAILED", error=str(exc), elapsed_ms=elapsed)
+        raise
+
+
+# ------------------------------------------------------------------
+# Entertainment Workers
+# ------------------------------------------------------------------
+
+
+async def process_age_predictor(
+    _ctx: dict[str, Any],
+    job_id: str,
+    file_url: str,
+) -> dict[str, Any]:
+    """Worker: predict apparent age from face image."""
+    start = time.time()
+    logger.info("age_predictor.start", job_id=job_id)
+    await _update_job(job_id, "PROCESSING")
+
+    try:
+        image_bytes = await _fetch_image(file_url)
+        from app.cv.entertainment.age_predictor import AgePredictor
+
+        result = AgePredictor().process(image_bytes)
+        elapsed = int((time.time() - start) * 1000)
+        await _update_job(job_id, "COMPLETED", result=result, elapsed_ms=elapsed)
+        logger.info("age_predictor.done", job_id=job_id, ms=elapsed)
+        return result
+    except Exception as exc:
+        elapsed = int((time.time() - start) * 1000)
+        logger.error("age_predictor.failed", job_id=job_id, error=str(exc))
+        await _update_job(job_id, "FAILED", error=str(exc), elapsed_ms=elapsed)
+        raise
+
+
+# ------------------------------------------------------------------
 # Worker Settings
 # ------------------------------------------------------------------
 
@@ -160,9 +314,20 @@ class WorkerSettings:
     """ARQ WorkerSettings for PixelMind AI job queue."""
 
     functions: ClassVar[list[object]] = [
+        # OCR & Documents
         process_receipt_scanner,
         process_invoice_reader,
         process_business_card_scanner,
+        # Photo Intelligence
+        process_background_remover,
+        # Creator Studio
+        process_caption_lens,
+        # Business Intel
+        process_shelf_counter,
+        # Agriculture AI
+        process_plant_disease_detector,
+        # Entertainment
+        process_age_predictor,
     ]
     redis_settings: ClassVar[RedisSettings] = RedisSettings.from_dsn(settings.REDIS_URL)
     queue_name: ClassVar[str] = "pixelmind:jobs"
