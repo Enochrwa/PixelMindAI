@@ -20,7 +20,7 @@ class BackgroundRemover:
         import base64
 
         try:
-            from rembg import remove  # type: ignore[import]
+            from rembg import remove
 
             output_bytes = remove(image_bytes)
             encoded = base64.b64encode(output_bytes).decode()

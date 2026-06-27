@@ -49,7 +49,7 @@ def detect_mime_type(file_bytes: bytes) -> str:
     kind = filetype.guess(file_bytes)
 
     if kind:
-        return kind.mime
+        return str(kind.mime)
 
     return "application/octet-stream"
 

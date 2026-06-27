@@ -28,7 +28,7 @@ class AgePredictor:
         """Predict age from face in image."""
         # Try DeepFace first
         try:
-            from deepface import DeepFace  # type: ignore[import]
+            from deepface import DeepFace
 
             pil = Image.open(io.BytesIO(image_bytes)).convert("RGB")
             img_array = np.array(pil)
