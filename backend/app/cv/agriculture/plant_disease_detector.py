@@ -69,14 +69,21 @@ class PlantDiseaseDetector:
             coverage = float(np.sum(mask > 0)) / total_pixels
             if coverage > profile["severity_threshold"]:
                 severity = "low" if coverage < 0.10 else "medium" if coverage < 0.25 else "high"
-                detections.append({
-                    "disease": profile["name"],
-                    "coverage_ratio": round(coverage, 4),
-                    "severity": severity,
-                })
+                detections.append(
+                    {
+                        "disease": profile["name"],
+                        "coverage_ratio": round(coverage, 4),
+                        "severity": severity,
+                    }
+                )
 
-        overall_health = "healthy" if not detections and green_ratio > 0.3 else \
-                         "diseased" if detections else "unknown"
+        overall_health = (
+            "healthy"
+            if not detections and green_ratio > 0.3
+            else "diseased"
+            if detections
+            else "unknown"
+        )
 
         pil = Image.open(io.BytesIO(image_bytes))
         w, h = pil.size

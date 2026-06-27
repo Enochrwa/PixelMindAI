@@ -108,10 +108,7 @@ async def upload_file(
         detected_mime,
     )
 
-    expires_at = (
-        datetime.now(UTC)
-        + timedelta(hours=settings.FREE_FILE_RETENTION_HOURS)
-    )
+    expires_at = datetime.now(UTC) + timedelta(hours=settings.FREE_FILE_RETENTION_HOURS)
 
     uploaded = UploadedFile(
         user_id=current_user.id,
