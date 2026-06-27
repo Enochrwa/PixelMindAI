@@ -1,5 +1,6 @@
-import { Link } from 'react-router-dom';
-import { Zap, Shield, Globe, ArrowRight } from 'lucide-react';
+import { Link, Navigate } from 'react-router-dom';
+import { Zap, Shield, Globe, ArrowRight, LayoutDashboard } from 'lucide-react';
+import { useAuthStore } from '@/stores/authStore';
 
 const tools = [
   { icon: '🧾', name: 'Receipt Scanner', desc: 'Extract merchant, items & totals from any receipt photo' },
@@ -11,6 +12,13 @@ const tools = [
 ];
 
 export function LandingPage() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
+  // Redirect authenticated users straight to the dashboard
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-950">
       {/* Nav */}
@@ -64,7 +72,7 @@ export function LandingPage() {
         <div className="mx-auto max-w-4xl px-6">
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
             {[
-              { icon: Zap, title: 'Fast & Async', desc: 'All CV jobs processed async via ARQ queue. Never wait at a spinner.' },
+              { icon: Zap, title: 'Fast & Async', desc: 'All CV jobs processed async. Never wait at a spinner.' },
               { icon: Shield, title: 'Secure by Design', desc: 'MIME validation, Pillow integrity checks, rate limiting on every endpoint.' },
               { icon: Globe, title: 'Built for Africa', desc: 'MTN MoMo payments coming. Multilingual OCR (EN/FR/Kinyarwanda). Offline-aware.' },
             ].map(({ icon: Icon, title, desc }) => (
@@ -76,6 +84,18 @@ export function LandingPage() {
             ))}
           </div>
         </div>
+      </section>
+
+      {/* Footer CTA */}
+      <section className="border-t border-gray-800 py-12 text-center">
+        <p className="text-gray-400 text-sm">Already have an account?</p>
+        <Link
+          to="/login"
+          className="mt-3 inline-flex items-center gap-2 rounded-lg bg-gray-800 px-6 py-2.5 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+        >
+          <LayoutDashboard size={15} />
+          Go to Dashboard
+        </Link>
       </section>
     </div>
   );
