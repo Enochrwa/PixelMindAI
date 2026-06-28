@@ -2,7 +2,7 @@
  * Universal ToolPage — wraps the full upload → process → result flow.
  */
 import { useParams } from 'react-router-dom';
-import { useState, useCallback, type ReactNode } from 'react';
+import { useState, useCallback, useEffect, type ReactNode } from 'react';
 import { CheckCircle, AlertCircle, RotateCcw } from 'lucide-react';
 import { FileDropzone } from '@/components/tools/FileDropzone';
 import { JobPoller } from '@/components/tools/JobPoller';
@@ -16,6 +16,9 @@ import {
   DocumentScannerResultPanel,
   SignatureExtractorResultPanel,
   FormFieldResultPanel,
+  // Sprint 3
+  BackgroundRemoverResultPanel,
+  PassportPhotoResultPanel,
 } from '@/components/tools/ResultPanels';
 import { api } from '@/lib/api';
 import type { UploadedFile } from '@/types';
@@ -67,7 +70,12 @@ const TOOL_META: Record<string, { name: string; description: string; credits: nu
   },
   'background-remover': {
     name: 'Background Remover',
-    description: 'Instantly remove the background from any photo with AI precision.',
+    description: 'Instantly remove the background from any photo. Choose transparent, white, color, or blur replacement.',
+    credits: 2,
+  },
+  'passport-photo': {
+    name: 'Passport Photo Generator',
+    description: 'Generate country-compliant passport photos for 30+ countries with one click.',
     credits: 2,
   },
   'caption-lens': {
@@ -97,34 +105,6 @@ function GenericResultPanel({ result }: { result: Record<string, unknown> }) {
     <pre className="overflow-auto rounded-lg bg-gray-950 p-4 text-xs text-gray-300 whitespace-pre-wrap">
       {JSON.stringify(result, null, 2)}
     </pre>
-  );
-}
-
-function BackgroundRemoverPanel({ result }: { result: Record<string, unknown> }) {
-  const b64 = result['result_image_b64'] as string | undefined;
-  const method = result['method'] as string | undefined;
-  if (!b64) return <GenericResultPanel result={result} />;
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2 text-xs text-gray-400">
-        <span className="rounded-full bg-indigo-500/10 px-2 py-0.5 text-indigo-300">
-          Method: {method ?? 'AI'}
-        </span>
-      </div>
-      <img
-        src={`data:image/png;base64,${b64}`}
-        alt="Background removed"
-        className="max-h-96 w-auto rounded-lg border border-gray-700 bg-checkered"
-        style={{ background: 'repeating-conic-gradient(#374151 0% 25%, #1f2937 0% 50%) 0 0 / 20px 20px' }}
-      />
-      <a
-        href={`data:image/png;base64,${b64}`}
-        download="background-removed.png"
-        className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
-      >
-        Download PNG
-      </a>
-    </div>
   );
 }
 
@@ -261,7 +241,10 @@ function renderResult(slug: string, result: Record<string, unknown>, jobId: stri
     return <BusinessCardResultPanel result={result as never} jobId={jobId} />;
   }
   if (slug === 'background-remover') {
-    return <BackgroundRemoverPanel result={result} />;
+    return <BackgroundRemoverResultPanel result={result as never} jobId={jobId} />;
+  }
+  if (slug === 'passport-photo') {
+    return <PassportPhotoResultPanel result={result as never} jobId={jobId} />;
   }
   if (slug === 'caption-lens') {
     return <CaptionLensPanel result={result} />;
@@ -302,8 +285,21 @@ export function ToolPage() {
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [passportCountry, setPassportCountry] = useState('us');
+  const [passportCountries, setPassportCountries] = useState<
+    Array<{ code: string; name: string; flag: string }>
+  >([]);
 
   const meta = TOOL_META[slug];
+
+  // Fetch passport countries when on passport-photo tool
+  useEffect(() => {
+    if (slug !== 'passport-photo') return;
+    api
+      .get<Array<{ code: string; name: string; flag: string }>>('/tools/passport-photo/countries')
+      .then(({ data }) => setPassportCountries(data))
+      .catch(() => {});
+  }, [slug]);
 
   const handleFileDrop = useCallback(
     async (file: File) => {
@@ -327,9 +323,13 @@ export function ToolPage() {
         });
 
         // 2. Enqueue processing job
+        const processBody: Record<string, unknown> = { file_id: uploaded.file_id };
+        if (slug === 'passport-photo') {
+          processBody['options'] = { country_code: passportCountry };
+        }
         const { data: jobData } = await api.post<{ job_id: string }>(
           `/tools/${slug}/process`,
-          { file_id: uploaded.file_id }
+          processBody
         );
 
         setJobId(jobData.job_id);
@@ -340,7 +340,7 @@ export function ToolPage() {
         setPhase('error');
       }
     },
-    [slug]
+    [slug, passportCountry]
   );
 
   const handleComplete = useCallback((res: Record<string, unknown>) => {
@@ -379,6 +379,31 @@ export function ToolPage() {
           </span>
         )}
       </div>
+
+      {/* Passport photo country selector */}
+      {slug === 'passport-photo' && phase !== 'done' && (
+        <div className="rounded-xl border border-gray-700/50 bg-gray-800/30 p-4">
+          <label className="mb-2 block text-sm font-medium text-gray-300" htmlFor="passport-country">
+            Select destination country
+          </label>
+          <select
+            id="passport-country"
+            value={passportCountry}
+            onChange={(e) => setPassportCountry(e.target.value)}
+            className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-sm text-gray-200 focus:border-indigo-500 focus:outline-none"
+          >
+            {passportCountries.length === 0 ? (
+              <option value="us">United States (US)</option>
+            ) : (
+              passportCountries.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.flag} {c.name} ({c.code.toUpperCase()})
+                </option>
+              ))
+            )}
+          </select>
+        </div>
+      )}
 
       {/* Drop zone — shown unless done */}
       {phase !== 'done' && (

@@ -758,3 +758,312 @@ export function FormFieldResultPanel({ result }: { result: FormFieldResult }) {
     </div>
   );
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sprint 3 — Background Remover Result Panel (S3-06)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface BackgroundRemoverResult {
+  result_image_b64: string;
+  format: 'png' | 'jpeg';
+  method: 'u2net' | 'grabcut';
+  background_mode: string;
+  width_px: number;
+  height_px: number;
+}
+
+export function BackgroundRemoverResultPanel({
+  result,
+  jobId,
+}: {
+  result: BackgroundRemoverResult;
+  jobId: string;
+}) {
+  const [sliderX, setSliderX] = useState(50);
+  const [activeBgMode, setActiveBgMode] = useState(result.background_mode ?? 'transparent');
+  const [currentResult, setCurrentResult] = useState(result);
+  const [reprocessing, setReprocessing] = useState(false);
+
+  const mimeType = currentResult.format === 'png' ? 'image/png' : 'image/jpeg';
+  const dataUrl = `data:${mimeType};base64,${currentResult.result_image_b64}`;
+  const fileSizeKb = Math.round((currentResult.result_image_b64.length * 3) / 4 / 1024);
+
+  const bgModes = [
+    { key: 'transparent', label: 'Transparent' },
+    { key: 'white', label: 'White' },
+    { key: 'color', label: 'Color' },
+    { key: 'blur', label: 'Blur' },
+  ] as const;
+
+  const resubmit = async (newMode: string) => {
+    setReprocessing(true);
+    setActiveBgMode(newMode);
+    try {
+      const { data: jobData } = await api.post<{ job_id: string }>(
+        '/tools/background-remover/process',
+        { file_id: jobId, options: { bg_mode: newMode } }
+      );
+      // Poll for result
+      let attempts = 0;
+      const poll = setInterval(async () => {
+        attempts++;
+        const { data: job } = await api.get<{ status: string; result: BackgroundRemoverResult }>(
+          `/jobs/${jobData.job_id}`
+        );
+        if (job.status === 'COMPLETED' && job.result) {
+          clearInterval(poll);
+          setCurrentResult(job.result);
+          setReprocessing(false);
+        } else if (job.status === 'FAILED' || attempts > 30) {
+          clearInterval(poll);
+          setReprocessing(false);
+        }
+      }, 2000);
+    } catch {
+      setReprocessing(false);
+    }
+  };
+
+  const downloadImage = () => {
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = `bg-removed.${currentResult.format}`;
+    a.click();
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Method badge + dimensions */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+          currentResult.method === 'u2net'
+            ? 'bg-indigo-500/15 text-indigo-300'
+            : 'bg-amber-500/15 text-amber-300'
+        }`}>
+          {currentResult.method === 'u2net' ? '✨ U2Net AI' : '⚙️ OpenCV GrabCut'}
+        </span>
+        <span className="text-xs text-gray-500">
+          {currentResult.width_px} × {currentResult.height_px}px · ~{fileSizeKb}KB
+        </span>
+      </div>
+
+      {/* Before/After slider */}
+      <div className="relative overflow-hidden rounded-xl border border-gray-700/50 bg-checkered"
+        style={{ background: 'repeating-conic-gradient(#374151 0% 25%, #1f2937 0% 50%) 0 0 / 20px 20px' }}>
+        <div className="relative select-none" style={{ minHeight: '200px' }}>
+          {/* After (result) — full width behind */}
+          <img
+            src={dataUrl}
+            alt="Background removed"
+            className="w-full object-contain rounded-xl"
+            style={{ maxHeight: '400px' }}
+          />
+          {/* Before (gray overlay simulating original) */}
+          <div
+            className="absolute inset-0 overflow-hidden"
+            style={{ clipPath: `inset(0 ${100 - sliderX}% 0 0)` }}
+          >
+            <div className="absolute inset-0 bg-gray-600/60 flex items-center justify-center">
+              <span className="text-xs text-white/70 font-medium">Original</span>
+            </div>
+          </div>
+          {/* Slider handle */}
+          <div
+            className="absolute top-0 bottom-0 w-0.5 bg-white cursor-ew-resize"
+            style={{ left: `${sliderX}%` }}
+          >
+            <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-lg text-gray-800 text-xs font-bold">
+              ↔
+            </div>
+          </div>
+          {/* Drag area */}
+          <input
+            type="range"
+            min={0}
+            max={100}
+            value={sliderX}
+            onChange={(e) => setSliderX(Number(e.target.value))}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize"
+          />
+        </div>
+      </div>
+
+      {/* Background mode selector */}
+      <div>
+        <p className="mb-2 text-xs font-medium text-gray-400">Background replacement</p>
+        <div className="grid grid-cols-4 gap-1.5">
+          {bgModes.map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => { void resubmit(key); }}
+              disabled={reprocessing}
+              className={`rounded-lg px-2 py-1.5 text-xs font-medium transition-colors ${
+                activeBgMode === key
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              } disabled:opacity-50`}
+            >
+              {reprocessing && activeBgMode === key ? (
+                <span className="inline-flex items-center gap-1">
+                  <span className="h-2.5 w-2.5 animate-spin rounded-full border border-white border-t-transparent" />
+                </span>
+              ) : (
+                label
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Download buttons */}
+      <div className="flex gap-2 flex-wrap">
+        <button
+          onClick={downloadImage}
+          className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500"
+        >
+          <Download size={12} />
+          Download {currentResult.format.toUpperCase()}
+        </button>
+        <DownloadButton jobId={jobId} slug="background-remover" format="json" label="JSON" />
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sprint 3 — Passport Photo Result Panel (S3-06)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface PassportPhotoSpec {
+  width_mm: number;
+  height_mm: number;
+  width_px: number;
+  height_px: number;
+  dpi: number;
+  bg_color: string;
+}
+
+export interface PassportPhotoResult {
+  result_image_b64: string;
+  format: 'jpeg';
+  country_code: string;
+  country_name: string;
+  spec_applied: PassportPhotoSpec;
+  face_detected: boolean;
+  quality_warnings: string[];
+  print_guide: string;
+}
+
+export function PassportPhotoResultPanel({
+  result,
+  jobId,
+}: {
+  result: PassportPhotoResult;
+  jobId: string;
+}) {
+  const dataUrl = `data:image/jpeg;base64,${result.result_image_b64}`;
+  const spec = result.spec_applied;
+
+  const downloadPhoto = () => {
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = `passport-photo-${result.country_code}.jpg`;
+    a.click();
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Country badge */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-2xl" role="img" aria-label={result.country_name}>
+            {/* flag emoji is in country name, show country_name */}
+          </span>
+          <div>
+            <h3 className="text-base font-semibold text-white">{result.country_name}</h3>
+            <p className="text-xs text-gray-400">
+              {spec.width_mm}×{spec.height_mm}mm @ {spec.dpi}DPI
+            </p>
+          </div>
+        </div>
+        <span className="rounded-full bg-green-500/10 px-2 py-0.5 text-xs text-green-400">
+          {result.face_detected ? '✓ Face detected' : '⚠ No face'}
+        </span>
+      </div>
+
+      {/* Photo preview with spec overlay */}
+      <div className="relative inline-block">
+        <img
+          src={dataUrl}
+          alt={`${result.country_name} passport photo`}
+          className="max-h-72 w-auto rounded-lg border border-gray-700/50 object-contain"
+          style={{ background: spec.bg_color }}
+        />
+        <div className="absolute bottom-1 right-1 rounded bg-black/60 px-1.5 py-0.5 text-xs text-white">
+          {spec.width_mm}×{spec.height_mm}mm · {spec.dpi}DPI
+        </div>
+      </div>
+
+      {/* Quality warnings */}
+      {result.quality_warnings.length > 0 && (
+        <div className="space-y-1.5">
+          <p className="text-xs font-medium text-yellow-400">⚠ Quality Warnings</p>
+          {result.quality_warnings.map((warning, i) => (
+            <div
+              key={i}
+              className="flex items-start gap-2 rounded-lg border border-yellow-800/40 bg-yellow-900/10 px-3 py-2 text-xs text-yellow-300"
+            >
+              <span className="mt-0.5 shrink-0">⚠</span>
+              <span>{warning}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Spec breakdown grid */}
+      <div className="grid grid-cols-3 gap-2">
+        {[
+          { label: 'Width', value: `${spec.width_mm}mm` },
+          { label: 'Height', value: `${spec.height_mm}mm` },
+          { label: 'DPI', value: String(spec.dpi) },
+          { label: 'Pixels', value: `${spec.width_px}×${spec.height_px}` },
+          { label: 'Country', value: result.country_code.toUpperCase() },
+          {
+            label: 'Background',
+            value: (
+              <span className="flex items-center gap-1">
+                <span
+                  className="inline-block h-3 w-3 rounded-full border border-gray-600"
+                  style={{ backgroundColor: spec.bg_color }}
+                />
+                {spec.bg_color}
+              </span>
+            ),
+          },
+        ].map((item, i) => (
+          <div key={i} className="rounded-lg bg-gray-800/50 p-2 text-center">
+            <p className="text-xs text-gray-500">{item.label}</p>
+            <p className="mt-0.5 text-xs font-medium text-gray-200">{item.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Print guide */}
+      <div className="rounded-lg border border-gray-700/40 bg-gray-800/30 px-3 py-2 text-xs text-gray-400">
+        🖨 {result.print_guide}
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-2 flex-wrap">
+        <button
+          onClick={downloadPhoto}
+          className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500"
+        >
+          <Download size={12} />
+          Download JPEG
+        </button>
+        <DownloadButton jobId={jobId} slug="passport-photo" format="json" label="JSON" />
+      </div>
+    </div>
+  );
+}
