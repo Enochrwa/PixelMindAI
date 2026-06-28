@@ -44,7 +44,7 @@ class PhotoPreprocessor:
         try:
             import mediapipe as mp
 
-            mp_face = mp.solutions.face_detection  # type: ignore[attr-defined]
+            mp_face = mp.solutions.face_detection
             with mp_face.FaceDetection(model_selection=1, min_detection_confidence=0.4) as detector:
                 import numpy as _np
 

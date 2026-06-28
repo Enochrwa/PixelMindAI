@@ -107,7 +107,7 @@ class PassportPhotoGenerator:
         try:
             import mediapipe as mp
 
-            mp_face = mp.solutions.face_detection  # type: ignore[attr-defined]
+            mp_face = mp.solutions.face_detection
             with mp_face.FaceDetection(model_selection=1, min_detection_confidence=0.4) as det:
                 arr: Any = np.array(pil)
                 results = det.process(arr)
@@ -226,7 +226,7 @@ class PassportPhotoGenerator:
         new_w = int(orig_w * scale)
         new_h = int(orig_h * scale)
 
-        resized: Any = rgba_pil.resize((new_w, new_h), Image.LANCZOS)
+        resized: Any = rgba_pil.resize((new_w, new_h), Image.Resampling.LANCZOS)
 
         # Center crop
         scaled_cx = int(face_cx * scale)
