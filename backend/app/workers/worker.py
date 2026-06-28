@@ -314,17 +314,25 @@ async def process_background_remover(
     _ctx: dict[str, Any],
     job_id: str,
     file_url: str,
+    bg_mode: str = "transparent",
+    bg_color_hex: str = "#FFFFFF",
+    bg_blur_radius: int = 21,
 ) -> dict[str, Any]:
-    """Worker: remove background from image."""
+    """Worker: remove background from image with configurable bg mode (S3-01)."""
     start = time.time()
-    logger.info("background_remover.start", job_id=job_id)
+    logger.info("background_remover.start", job_id=job_id, bg_mode=bg_mode)
     await _update_job(job_id, "PROCESSING")
 
     try:
         image_bytes = await _fetch_image(file_url)
         from app.cv.photo.background_remover import BackgroundRemover
 
-        result = BackgroundRemover().process(image_bytes)
+        result = BackgroundRemover().process(
+            image_bytes,
+            bg_mode=bg_mode,
+            bg_color_hex=bg_color_hex,
+            bg_blur_radius=bg_blur_radius,
+        )
         elapsed = int((time.time() - start) * 1000)
         await _update_job(job_id, "COMPLETED", result=result, elapsed_ms=elapsed)
         logger.info("background_remover.done", job_id=job_id, ms=elapsed)
@@ -332,6 +340,33 @@ async def process_background_remover(
     except Exception as exc:
         elapsed = int((time.time() - start) * 1000)
         logger.error("background_remover.failed", job_id=job_id, error=str(exc))
+        await _update_job(job_id, "FAILED", error=str(exc), elapsed_ms=elapsed)
+        raise
+
+
+async def process_passport_photo(
+    _ctx: dict[str, Any],
+    job_id: str,
+    file_url: str,
+    country_code: str = "us",
+) -> dict[str, Any]:
+    """Worker: generate country-compliant passport photo (S3-02)."""
+    start = time.time()
+    logger.info("passport_photo.start", job_id=job_id, country_code=country_code)
+    await _update_job(job_id, "PROCESSING")
+
+    try:
+        image_bytes = await _fetch_image(file_url)
+        from app.cv.photo.passport_photo import PassportPhotoGenerator
+
+        result = PassportPhotoGenerator().process(image_bytes, country_code=country_code)
+        elapsed = int((time.time() - start) * 1000)
+        await _update_job(job_id, "COMPLETED", result=result, elapsed_ms=elapsed)
+        logger.info("passport_photo.done", job_id=job_id, ms=elapsed)
+        return result
+    except Exception as exc:
+        elapsed = int((time.time() - start) * 1000)
+        logger.error("passport_photo.failed", job_id=job_id, error=str(exc))
         await _update_job(job_id, "FAILED", error=str(exc), elapsed_ms=elapsed)
         raise
 
@@ -479,8 +514,9 @@ class WorkerSettings:
         process_document_scanner,
         process_signature_extractor,
         process_form_field_reader,
-        # Photo Intelligence
+        # Photo Intelligence (Sprint 3)
         process_background_remover,
+        process_passport_photo,
         # Creator Studio
         process_caption_lens,
         # Business Intel

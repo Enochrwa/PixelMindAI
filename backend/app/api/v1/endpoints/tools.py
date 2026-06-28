@@ -7,6 +7,7 @@ Universal async pattern:
 
 from __future__ import annotations
 
+import base64
 import io
 from typing import TYPE_CHECKING, Any
 
@@ -39,8 +40,9 @@ SUPPORTED_TOOLS: set[str] = {
     "document-scanner",
     "signature-extractor",
     "form-field-reader",
-    # Photo Intelligence
+    # Photo Intelligence (Sprint 3)
     "background-remover",
+    "passport-photo",
     # Creator Studio
     "caption-lens",
     # Business Intel
@@ -63,6 +65,9 @@ SPRINT_TWO_TOOLS = {
     "form-field-reader",
 }
 
+# Sprint 3 tools
+SPRINT_THREE_TOOLS = {"background-remover", "passport-photo"}
+
 # Credit costs per tool
 CREDIT_COSTS: dict[str, int] = {
     "receipt-scanner": 1,
@@ -74,8 +79,9 @@ CREDIT_COSTS: dict[str, int] = {
     "document-scanner": 1,
     "signature-extractor": 1,
     "form-field-reader": 2,
-    # Photo
+    # Photo Intelligence (Sprint 3)
     "background-remover": 2,
+    "passport-photo": 2,
     "caption-lens": 1,
     "shelf-counter": 2,
     "plant-disease-detector": 1,
@@ -149,6 +155,20 @@ class FormFieldRequest(BaseModel):
     """Form Field Reader request."""
 
     file_id: str
+
+
+class BackgroundRemoverRequest(BaseModel):
+    """Background Remover request with options."""
+
+    file_id: str
+    options: dict[str, Any] | None = None
+
+
+class PassportPhotoRequest(BaseModel):
+    """Passport Photo request with options."""
+
+    file_id: str
+    options: dict[str, Any] | None = None
 
 
 # ------------------------------------------------------------------
@@ -453,11 +473,16 @@ async def process_form_field_reader(
 
 @router.post("/background-remover/process", response_model=ProcessResponse, status_code=202)
 async def process_background_remover(
-    body: ProcessRequest,
+    body: BackgroundRemoverRequest,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> ProcessResponse:
-    """Enqueue a background removal job."""
+    """Enqueue a background removal job with configurable options."""
+    options = body.options or {}
+    bg_mode: str = str(options.get("bg_mode", "transparent"))
+    bg_color_hex: str = str(options.get("bg_color_hex", "#FFFFFF"))
+    bg_blur_radius: int = int(options.get("bg_blur_radius", 21))
+
     file_record, job = await _validate_file_and_deduct(
         body.file_id, "background-remover", current_user, db
     )
@@ -468,9 +493,69 @@ async def process_background_remover(
         "process_background_remover",
         job.id,
         file_url,
+        bg_mode,
+        bg_color_hex,
+        bg_blur_radius,
         _queue_name="pixelmind:jobs",
     )
     return ProcessResponse(job_id=job.id)
+
+
+# ------------------------------------------------------------------
+# Passport Photo Generator (Sprint 3)
+# ------------------------------------------------------------------
+
+
+@router.post("/passport-photo/process", response_model=ProcessResponse, status_code=202)
+async def process_passport_photo(
+    body: PassportPhotoRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ProcessResponse:
+    """Enqueue a passport photo generation job."""
+    options = body.options or {}
+    country_code: str = str(options.get("country_code", "us"))
+
+    file_record, job = await _validate_file_and_deduct(
+        body.file_id, "passport-photo", current_user, db
+    )
+    from app.core.storage import r2
+
+    file_url = r2.public_url(file_record.r2_key)
+    await enqueue_job(
+        "process_passport_photo",
+        job.id,
+        file_url,
+        country_code,
+        _queue_name="pixelmind:jobs",
+    )
+    return ProcessResponse(job_id=job.id)
+
+
+@router.get("/passport-photo/countries", response_model=None)
+async def list_passport_countries() -> list[dict[str, object]]:
+    """Return all available country passport specs. No auth required."""
+    import json
+    from pathlib import Path
+
+    specs_path = Path(__file__).parent.parent.parent.parent / "cv" / "data" / "passport_specs.json"
+    with specs_path.open() as f:
+        specs: dict[str, Any] = json.load(f)
+
+    countries: list[dict[str, object]] = []
+    for code, spec in specs.items():
+        countries.append(
+            {
+                "code": code,
+                "name": spec["name"],
+                "flag": spec.get("flag", ""),
+                "width_mm": spec["width_mm"],
+                "height_mm": spec["height_mm"],
+                "dpi": spec["dpi"],
+                "bg_color": spec["bg_color_hex"],
+            }
+        )
+    return sorted(countries, key=lambda c: str(c["name"]))
 
 
 # ------------------------------------------------------------------
@@ -590,7 +675,7 @@ async def process_age_predictor(
 async def export_result(
     slug: str,
     job_id: str,
-    format: str = Query(default="json", pattern="^(json|csv|vcf|qb_csv)$"),
+    format: str = Query(default="json", pattern="^(json|csv|vcf|qb_csv|png|jpeg)$"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> JSONResponse | StreamingResponse:
@@ -672,5 +757,34 @@ async def export_result(
             media_type="text/csv",
             headers={"Content-Disposition": f"attachment; filename=quickbooks_{job_id[:8]}.csv"},
         )
+
+    # Sprint 3 photo exports
+    if slug == "background-remover":
+        result_b64 = result_data.get("result_image_b64", "")
+        fmt_str = result_data.get("format", "png")
+        if result_b64:
+            img_bytes = base64.b64decode(result_b64)
+            media = "image/png" if fmt_str == "png" else "image/jpeg"
+            ext = fmt_str
+            return StreamingResponse(
+                io.BytesIO(img_bytes),
+                media_type=media,
+                headers={
+                    "Content-Disposition": f"attachment; filename=bg_removed_{job_id[:8]}.{ext}"
+                },
+            )
+
+    if slug == "passport-photo":
+        result_b64 = result_data.get("result_image_b64", "")
+        if result_b64:
+            img_bytes = base64.b64decode(result_b64)
+            country = result_data.get("country_code", "passport")
+            return StreamingResponse(
+                io.BytesIO(img_bytes),
+                media_type="image/jpeg",
+                headers={
+                    "Content-Disposition": f"attachment; filename=passport_{country}_{job_id[:8]}.jpg"  # noqa: E501
+                },
+            )
 
     raise HTTPException(400, f"Format {format!r} not supported for {slug!r}")

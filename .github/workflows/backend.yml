@@ -2,7 +2,7 @@ name: Backend CI/CD
 
 on:
   push:
-    branches: [main, develop, feature/sprint-one-implementation, feature/folder-restructure, feature/sprint-two-implementation]
+    branches: [main, develop, feature/sprint-one-implementation, feature/folder-restructure, feature/sprint-two-implementation, feature/sprint-three-implementation]
     paths:
       - 'backend/**'
       - '.github/workflows/backend.yml'
