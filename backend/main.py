@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import uvicorn
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+import uvicorn
 
 from app.api.v1.endpoints import auth, files, health, jobs
 from app.api.v1.endpoints.tools import router as tools_router
@@ -17,7 +16,6 @@ from app.middleware.rate_limit import RateLimitMiddleware
 
 def create_app() -> FastAPI:
     """Application factory."""
-
     app = FastAPI(
         title=settings.APP_NAME,
         version=settings.APP_VERSION,
@@ -59,7 +57,7 @@ app = create_app()
 if __name__ == "__main__":
     uvicorn.run(
         "main:app",
-        host=settings.HOST,  # noqa: S104
+        host=settings.HOST,
         port=settings.PORT,
         reload=True,
     )

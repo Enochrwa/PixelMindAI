@@ -50,7 +50,7 @@ class AgePredictor:
             }
         except ImportError:
             logger.debug("deepface not available, falling back to haar cascade")
-        except Exception:  # noqa: BLE001
+        except Exception:
             logger.debug("deepface analysis failed, falling back to haar cascade")
 
         # Fallback: OpenCV Haar Cascade face detection + heuristic age estimation
@@ -81,7 +81,7 @@ class AgePredictor:
         return {
             "predicted_age": estimated_age,
             "age_range": _age_to_range(estimated_age),
-            "faces_detected": int(len(faces)),
+            "faces_detected": len(faces),
             "face_location": {"x": int(x), "y": int(y), "width": int(w), "height": int(h)},
             "method": "haar_heuristic",
             "confidence": 0.55,

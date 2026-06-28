@@ -334,3 +334,427 @@ export function BusinessCardResultPanel({ result, jobId }: { result: BizCardResu
     </div>
   );
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sprint 2 — Handwriting OCR Result Panel
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface HandwritingParagraph {
+  text: string;
+  confidence: number;
+}
+
+interface HandwritingBlock {
+  type: 'heading' | 'bullet_list' | 'numbered_list' | 'paragraph';
+  text: string;
+  confidence: number;
+}
+
+interface HandwritingResult {
+  raw_text?: string;
+  paragraphs?: HandwritingParagraph[];
+  word_count?: number;
+  language_detected?: string;
+  confidence_score?: number;
+  structured_blocks?: HandwritingBlock[];
+}
+
+export function HandwritingResultPanel({ result, jobId }: { result: HandwritingResult; jobId: string }) {
+  const [view, setView] = useState<'text' | 'structured'>('text');
+  const rawText = result.raw_text ?? '';
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {result.word_count != null && (
+            <span className="rounded-full bg-gray-700 px-2 py-0.5 text-xs text-gray-300">
+              {result.word_count} words
+            </span>
+          )}
+          {result.language_detected && (
+            <span className="rounded-full bg-gray-700 px-2 py-0.5 text-xs uppercase text-gray-300">
+              {result.language_detected}
+            </span>
+          )}
+        </div>
+        {result.confidence_score != null && <ConfidenceBadge score={result.confidence_score} />}
+      </div>
+
+      {result.structured_blocks && result.structured_blocks.length > 0 && (
+        <div className="flex rounded-lg bg-gray-800/50 p-1">
+          {(['text', 'structured'] as const).map((v) => (
+            <button
+              key={v}
+              onClick={() => setView(v)}
+              className={`flex-1 rounded-md py-1.5 text-xs font-medium capitalize transition-colors ${
+                view === v ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              {v === 'text' ? 'Plain Text' : 'Structured'}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {view === 'text' ? (
+        <div className="relative">
+          <pre className="max-h-80 overflow-auto rounded-lg bg-gray-900 p-4 text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">
+            {rawText || '(no text detected)'}
+          </pre>
+          {rawText && <CopyButton text={rawText} />}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {result.structured_blocks?.map((block, i) => (
+            <div key={i} className="rounded-lg bg-gray-800/50 p-3">
+              <span className="mb-1 inline-block rounded bg-indigo-500/10 px-1.5 py-0.5 text-xs text-indigo-400">
+                {block.type.replace('_', ' ')}
+              </span>
+              <p className="mt-1 text-sm text-gray-300 whitespace-pre-wrap">{block.text}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <DownloadButton jobId={jobId} slug="handwriting-ocr" format="csv" label=".txt" />
+        <DownloadButton jobId={jobId} slug="handwriting-ocr" format="json" label="JSON" />
+        <CopyButton text={rawText} />
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sprint 2 — Menu Scanner Result Panel
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface MenuItem {
+  name: string;
+  description?: string;
+  price?: number;
+}
+
+interface MenuCategory {
+  name: string;
+  items: MenuItem[];
+}
+
+interface MenuResult {
+  restaurant_name?: string;
+  currency?: string;
+  categories?: MenuCategory[];
+  total_items?: number;
+  confidence_score?: number;
+}
+
+export function MenuResultPanel({ result, jobId }: { result: MenuResult; jobId: string }) {
+  const [openCat, setOpenCat] = useState<number | null>(0);
+  const fmt = (v: number | undefined) =>
+    v != null ? `${result.currency ?? ''} ${v.toLocaleString()}` : '—';
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-start justify-between">
+        <div>
+          <h3 className="text-lg font-semibold text-white">{result.restaurant_name ?? 'Menu'}</h3>
+          <p className="text-xs text-gray-500">
+            {result.total_items ?? 0} items · {result.currency ?? 'USD'}
+          </p>
+        </div>
+        {result.confidence_score != null && <ConfidenceBadge score={result.confidence_score} />}
+      </div>
+
+      <div className="space-y-2">
+        {(result.categories ?? []).map((cat, ci) => (
+          <div key={ci} className="overflow-hidden rounded-lg border border-gray-700/50">
+            <button
+              className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm font-medium text-gray-200 hover:bg-gray-800/50"
+              onClick={() => setOpenCat(openCat === ci ? null : ci)}
+            >
+              <span>{cat.name}</span>
+              <span className="text-xs text-gray-500">{cat.items.length} items</span>
+            </button>
+            {openCat === ci && (
+              <div className="divide-y divide-gray-700/30">
+                {cat.items.map((item, ii) => (
+                  <div key={ii} className="flex items-start justify-between px-4 py-2">
+                    <div>
+                      <p className="text-sm text-gray-200">{item.name}</p>
+                      {item.description && (
+                        <p className="text-xs text-gray-500">{item.description}</p>
+                      )}
+                    </div>
+                    <span className="ml-4 whitespace-nowrap text-sm text-indigo-300">
+                      {fmt(item.price)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="flex gap-2">
+        <DownloadButton jobId={jobId} slug="menu-scanner" format="csv" label="CSV" />
+        <DownloadButton jobId={jobId} slug="menu-scanner" format="json" label="JSON" />
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sprint 2 — Document Scanner Result Panel
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface DocumentScanResult {
+  result_image_b64?: string;
+  format?: string;
+  mode?: string;
+  width_px?: number;
+  height_px?: number;
+  quality_score?: number;
+  // multi-page PDF
+  pdf_b64?: string;
+  page_count?: number;
+}
+
+export function DocumentScannerResultPanel({ result }: { result: DocumentScanResult }) {
+  const downloadImg = () => {
+    if (!result.result_image_b64) return;
+    const a = document.createElement('a');
+    a.href = `data:image/jpeg;base64,${result.result_image_b64}`;
+    a.download = `scanned_document.jpg`;
+    a.click();
+  };
+
+  const downloadPdf = () => {
+    if (!result.pdf_b64) return;
+    const bytes = atob(result.pdf_b64);
+    const arr = new Uint8Array(bytes.length);
+    for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+    const blob = new Blob([arr], { type: 'application/pdf' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'scanned_document.pdf';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  if (result.pdf_b64) {
+    return (
+      <div className="space-y-4 text-center">
+        <div className="rounded-lg bg-gray-800/50 p-6">
+          <p className="text-2xl font-bold text-white">{result.page_count ?? '?'}</p>
+          <p className="text-sm text-gray-400">pages scanned</p>
+        </div>
+        <button
+          onClick={downloadPdf}
+          className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
+        >
+          <Download size={14} /> Download PDF
+        </button>
+      </div>
+    );
+  }
+
+  if (!result.result_image_b64) {
+    return <p className="text-sm text-gray-400">No result image available.</p>;
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between text-xs text-gray-400">
+        <span className="rounded-full bg-gray-700 px-2 py-0.5 capitalize">
+          {result.mode?.replace('_', ' ') ?? 'enhanced'}
+        </span>
+        <span>
+          {result.width_px} × {result.height_px}px
+        </span>
+        {result.quality_score != null && <ConfidenceBadge score={result.quality_score} />}
+      </div>
+
+      <img
+        src={`data:image/jpeg;base64,${result.result_image_b64}`}
+        alt="Scanned document"
+        className="w-full rounded-lg border border-gray-700/50 object-contain"
+      />
+
+      <button
+        onClick={downloadImg}
+        className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
+      >
+        <Download size={14} /> Download Image
+      </button>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sprint 2 — Signature Extractor Result Panel
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface SignatureBbox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+interface Signature {
+  bbox: SignatureBbox;
+  image_b64: string;
+  confidence: number;
+  format: string;
+}
+
+interface SignatureResult {
+  signatures?: Signature[];
+  signature_count?: number;
+  image_width?: number;
+  image_height?: number;
+}
+
+export function SignatureExtractorResultPanel({ result }: { result: SignatureResult }) {
+  const sigs = result.signatures ?? [];
+
+  const downloadSig = (sig: Signature, idx: number) => {
+    const a = document.createElement('a');
+    a.href = `data:image/png;base64,${sig.image_b64}`;
+    a.download = `signature_${idx + 1}.png`;
+    a.click();
+  };
+
+  const downloadAll = () => {
+    sigs.forEach((sig, i) => downloadSig(sig, i));
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-medium text-gray-300">
+          {result.signature_count ?? 0} signature{result.signature_count !== 1 ? 's' : ''} detected
+        </p>
+        {sigs.length > 1 && (
+          <button
+            onClick={downloadAll}
+            className="flex items-center gap-1.5 rounded-lg bg-gray-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-600"
+          >
+            <Download size={12} /> Download All
+          </button>
+        )}
+      </div>
+
+      {sigs.length === 0 ? (
+        <p className="rounded-lg bg-gray-800/50 p-4 text-center text-sm text-gray-400">
+          No signatures detected in this document.
+        </p>
+      ) : (
+        <div className="grid grid-cols-2 gap-3">
+          {sigs.map((sig, i) => (
+            <div key={i} className="space-y-2 rounded-lg border border-gray-700/50 p-3">
+              <img
+                src={`data:image/png;base64,${sig.image_b64}`}
+                alt={`Signature ${i + 1}`}
+                className="w-full rounded bg-white object-contain"
+              />
+              <div className="flex items-center justify-between">
+                <ConfidenceBadge score={sig.confidence} />
+                <button
+                  onClick={() => downloadSig(sig, i)}
+                  className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300"
+                >
+                  <Download size={10} /> PNG
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sprint 2 — Form Field Reader Result Panel
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface FormField {
+  field_bbox: { x: number; y: number; width: number; height: number };
+  label_text: string;
+  value_text: string;
+  confidence: number;
+  zone?: string;
+  row?: number;
+}
+
+interface FormFieldResult {
+  fields?: FormField[];
+  field_count?: number;
+  image_width?: number;
+  image_height?: number;
+  lines_detected?: number;
+}
+
+export function FormFieldResultPanel({ result }: { result: FormFieldResult }) {
+  const fields = result.fields ?? [];
+  const filled = fields.filter((f) => f.value_text?.trim());
+
+  const copyAll = () => {
+    const text = fields
+      .map((f) => `${f.label_text || 'Field'}: ${f.value_text}`)
+      .join('\n');
+    void navigator.clipboard.writeText(text);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex gap-3">
+          <span className="rounded-full bg-gray-700 px-2 py-0.5 text-xs text-gray-300">
+            {result.field_count ?? 0} fields
+          </span>
+          <span className="rounded-full bg-green-500/10 px-2 py-0.5 text-xs text-green-400">
+            {filled.length} with values
+          </span>
+        </div>
+        <button
+          onClick={copyAll}
+          className="flex items-center gap-1 text-xs text-gray-400 hover:text-white"
+        >
+          <Copy size={12} /> Copy All
+        </button>
+      </div>
+
+      {fields.length === 0 ? (
+        <p className="rounded-lg bg-gray-800/50 p-4 text-center text-sm text-gray-400">
+          No form fields detected.
+        </p>
+      ) : (
+        <div className="space-y-2">
+          {fields.map((field, i) => (
+            <div
+              key={i}
+              className="flex items-start justify-between gap-4 rounded-lg bg-gray-800/50 px-3 py-2.5"
+            >
+              <div className="min-w-0">
+                {field.label_text && (
+                  <p className="text-xs text-gray-500">{field.label_text}</p>
+                )}
+                <p className="mt-0.5 text-sm text-gray-200">
+                  {field.value_text || <span className="text-gray-600 italic">empty</span>}
+                </p>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <ConfidenceBadge score={field.confidence} />
+                {field.value_text && <CopyButton text={field.value_text} />}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

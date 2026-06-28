@@ -33,6 +33,12 @@ SUPPORTED_TOOLS: set[str] = {
     "receipt-scanner",
     "invoice-reader",
     "business-card-scanner",
+    # Document AI Advanced (Sprint 2)
+    "handwriting-ocr",
+    "menu-scanner",
+    "document-scanner",
+    "signature-extractor",
+    "form-field-reader",
     # Photo Intelligence
     "background-remover",
     # Creator Studio
@@ -48,11 +54,27 @@ SUPPORTED_TOOLS: set[str] = {
 # Sprint 1 tools (export supported)
 SPRINT_ONE_TOOLS = {"receipt-scanner", "invoice-reader", "business-card-scanner"}
 
+# Sprint 2 tools (export supported)
+SPRINT_TWO_TOOLS = {
+    "handwriting-ocr",
+    "menu-scanner",
+    "document-scanner",
+    "signature-extractor",
+    "form-field-reader",
+}
+
 # Credit costs per tool
 CREDIT_COSTS: dict[str, int] = {
     "receipt-scanner": 1,
     "invoice-reader": 2,
     "business-card-scanner": 1,
+    # Sprint 2
+    "handwriting-ocr": 2,
+    "menu-scanner": 2,
+    "document-scanner": 1,
+    "signature-extractor": 1,
+    "form-field-reader": 2,
+    # Photo
     "background-remover": 2,
     "caption-lens": 1,
     "shelf-counter": 2,
@@ -95,6 +117,40 @@ class ProcessResponse(BaseModel):
     message: str = "Job enqueued. Poll GET /api/v1/jobs/{job_id} for result."
 
 
+class HandwritingProcessRequest(BaseModel):
+    """Handwriting OCR options."""
+
+    file_id: str
+    options: dict[str, Any] | None = None
+
+
+class MenuProcessRequest(BaseModel):
+    """Menu Scanner options."""
+
+    file_id: str
+    options: dict[str, Any] | None = None
+
+
+class DocumentScannerRequest(BaseModel):
+    """Document Scanner — single or multi-page."""
+
+    file_id: str | None = None
+    file_ids: list[str] | None = None
+    options: dict[str, Any] | None = None
+
+
+class SignatureExtractorRequest(BaseModel):
+    """Signature Extractor request."""
+
+    file_id: str
+
+
+class FormFieldRequest(BaseModel):
+    """Form Field Reader request."""
+
+    file_id: str
+
+
 # ------------------------------------------------------------------
 # Helper
 # ------------------------------------------------------------------
@@ -103,8 +159,8 @@ class ProcessResponse(BaseModel):
 async def _validate_file_and_deduct(
     file_id: str,
     tool_slug: str,
-    user: "User",
-    db: "AsyncSession",
+    user: User,
+    db: AsyncSession,
 ) -> tuple[UploadedFile, ProcessingJob]:
     """Validate file ownership and create a job record."""
     result = await db.execute(
@@ -154,8 +210,8 @@ async def _validate_file_and_deduct(
 @router.post("/receipt-scanner/process", response_model=ProcessResponse, status_code=202)
 async def process_receipt(
     body: ProcessRequest,
-    db: "AsyncSession" = Depends(get_db),
-    current_user: "User" = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> ProcessResponse:
     """Enqueue a receipt scanning job."""
     file_record, job = await _validate_file_and_deduct(
@@ -182,8 +238,8 @@ async def process_receipt(
 @router.post("/invoice-reader/process", response_model=ProcessResponse, status_code=202)
 async def process_invoice(
     body: InvoiceProcessRequest,
-    db: "AsyncSession" = Depends(get_db),
-    current_user: "User" = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> ProcessResponse:
     """Enqueue an invoice reading job."""
     options = body.options or {}
@@ -214,8 +270,8 @@ async def process_invoice(
 @router.post("/business-card-scanner/process", response_model=ProcessResponse, status_code=202)
 async def process_business_card(
     body: BizCardProcessRequest,
-    db: "AsyncSession" = Depends(get_db),
-    current_user: "User" = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> ProcessResponse:
     """Enqueue a business card scanning job (single or bulk)."""
     # Resolve file IDs
@@ -251,6 +307,146 @@ async def process_business_card(
 
 
 # ------------------------------------------------------------------
+# Sprint 2 — Document AI Advanced endpoints (S2-06)
+# ------------------------------------------------------------------
+
+
+@router.post("/handwriting-ocr/process", response_model=ProcessResponse, status_code=202)
+async def process_handwriting_ocr(
+    body: HandwritingProcessRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ProcessResponse:
+    """Enqueue a handwriting OCR job."""
+    options = body.options or {}
+    structure_mode: bool = bool(options.get("structure_mode", True))
+
+    file_record, job = await _validate_file_and_deduct(
+        body.file_id, "handwriting-ocr", current_user, db
+    )
+    from app.core.storage import r2
+
+    file_url = r2.public_url(file_record.r2_key)
+    await enqueue_job(
+        "process_handwriting_ocr",
+        job.id,
+        file_url,
+        structure_mode,
+        _queue_name="pixelmind:jobs",
+    )
+    return ProcessResponse(job_id=job.id)
+
+
+@router.post("/menu-scanner/process", response_model=ProcessResponse, status_code=202)
+async def process_menu_scanner(
+    body: MenuProcessRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ProcessResponse:
+    """Enqueue a menu scanning job."""
+    options = body.options or {}
+    export_format: str = str(options.get("export_format", "json"))
+    pos_format: bool = bool(options.get("pos_format", False))
+
+    file_record, job = await _validate_file_and_deduct(
+        body.file_id, "menu-scanner", current_user, db
+    )
+    from app.core.storage import r2
+
+    file_url = r2.public_url(file_record.r2_key)
+    await enqueue_job(
+        "process_menu_scanner",
+        job.id,
+        file_url,
+        export_format,
+        pos_format,
+        _queue_name="pixelmind:jobs",
+    )
+    return ProcessResponse(job_id=job.id)
+
+
+@router.post("/document-scanner/process", response_model=ProcessResponse, status_code=202)
+async def process_document_scanner(
+    body: DocumentScannerRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ProcessResponse:
+    """Enqueue a document scanning job (single or multi-page)."""
+    options = body.options or {}
+    scan_mode: str = str(options.get("mode", "original_enhanced"))
+
+    file_ids = body.file_ids if body.file_ids else ([body.file_id] if body.file_id else None)
+    if not file_ids:
+        raise HTTPException(400, "Provide file_id or file_ids")
+
+    from app.core.storage import r2
+
+    file_urls: list[str] = []
+    job: ProcessingJob | None = None
+    for fid in file_ids:
+        file_record, job = await _validate_file_and_deduct(
+            fid, "document-scanner", current_user, db
+        )
+        file_urls.append(r2.public_url(file_record.r2_key))
+
+    if job is None:
+        raise HTTPException(400, "No valid files")
+
+    await enqueue_job(
+        "process_document_scanner",
+        job.id,
+        file_urls,
+        scan_mode,
+        _queue_name="pixelmind:jobs",
+    )
+    return ProcessResponse(job_id=job.id)
+
+
+@router.post("/signature-extractor/process", response_model=ProcessResponse, status_code=202)
+async def process_signature_extractor(
+    body: SignatureExtractorRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ProcessResponse:
+    """Enqueue a signature extraction job."""
+    file_record, job = await _validate_file_and_deduct(
+        body.file_id, "signature-extractor", current_user, db
+    )
+    from app.core.storage import r2
+
+    file_url = r2.public_url(file_record.r2_key)
+    await enqueue_job(
+        "process_signature_extractor",
+        job.id,
+        file_url,
+        _queue_name="pixelmind:jobs",
+    )
+    return ProcessResponse(job_id=job.id)
+
+
+@router.post("/form-field-reader/process", response_model=ProcessResponse, status_code=202)
+async def process_form_field_reader(
+    body: FormFieldRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ProcessResponse:
+    """Enqueue a form field reading job."""
+    file_record, job = await _validate_file_and_deduct(
+        body.file_id, "form-field-reader", current_user, db
+    )
+    from app.core.storage import r2
+
+    file_url = r2.public_url(file_record.r2_key)
+    await enqueue_job(
+        "process_form_field_reader",
+        job.id,
+        file_url,
+        _queue_name="pixelmind:jobs",
+    )
+    return ProcessResponse(job_id=job.id)
+
+
+# ------------------------------------------------------------------
 # Background Remover
 # ------------------------------------------------------------------
 
@@ -258,8 +454,8 @@ async def process_business_card(
 @router.post("/background-remover/process", response_model=ProcessResponse, status_code=202)
 async def process_background_remover(
     body: ProcessRequest,
-    db: "AsyncSession" = Depends(get_db),
-    current_user: "User" = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> ProcessResponse:
     """Enqueue a background removal job."""
     file_record, job = await _validate_file_and_deduct(
@@ -285,8 +481,8 @@ async def process_background_remover(
 @router.post("/caption-lens/process", response_model=ProcessResponse, status_code=202)
 async def process_caption_lens(
     body: ProcessRequest,
-    db: "AsyncSession" = Depends(get_db),
-    current_user: "User" = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> ProcessResponse:
     """Enqueue a caption generation job."""
     file_record, job = await _validate_file_and_deduct(
@@ -312,8 +508,8 @@ async def process_caption_lens(
 @router.post("/shelf-counter/process", response_model=ProcessResponse, status_code=202)
 async def process_shelf_counter(
     body: ProcessRequest,
-    db: "AsyncSession" = Depends(get_db),
-    current_user: "User" = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> ProcessResponse:
     """Enqueue a shelf counting job."""
     file_record, job = await _validate_file_and_deduct(
@@ -339,8 +535,8 @@ async def process_shelf_counter(
 @router.post("/plant-disease-detector/process", response_model=ProcessResponse, status_code=202)
 async def process_plant_disease(
     body: ProcessRequest,
-    db: "AsyncSession" = Depends(get_db),
-    current_user: "User" = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> ProcessResponse:
     """Enqueue a plant disease detection job."""
     file_record, job = await _validate_file_and_deduct(
@@ -366,8 +562,8 @@ async def process_plant_disease(
 @router.post("/age-predictor/process", response_model=ProcessResponse, status_code=202)
 async def process_age_predictor(
     body: ProcessRequest,
-    db: "AsyncSession" = Depends(get_db),
-    current_user: "User" = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> ProcessResponse:
     """Enqueue an age prediction job."""
     file_record, job = await _validate_file_and_deduct(
@@ -395,8 +591,8 @@ async def export_result(
     slug: str,
     job_id: str,
     format: str = Query(default="json", pattern="^(json|csv|vcf|qb_csv)$"),
-    db: "AsyncSession" = Depends(get_db),
-    current_user: "User" = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> JSONResponse | StreamingResponse:
     """Download the result of a completed job in the requested format."""
     if slug not in SUPPORTED_TOOLS:
@@ -433,6 +629,14 @@ async def export_result(
             from app.cv.tools.business_card_scanner import BusinessCardScanner
 
             content = BusinessCardScanner().to_csv(result_data)
+        elif slug == "menu-scanner":
+            from app.cv.tools.menu_scanner import MenuScanner
+
+            content = MenuScanner().to_csv(result_data)
+        elif slug == "handwriting-ocr":
+            from app.cv.tools.handwriting_ocr import HandwritingOCR
+
+            content = HandwritingOCR.to_txt(result_data)
         else:
             # Generic CSV for other tools
             import csv as csv_mod

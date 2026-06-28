@@ -151,6 +151,161 @@ async def process_business_card_scanner(
 
 
 # ------------------------------------------------------------------
+# Sprint 2 Workers — Document AI Advanced
+# ------------------------------------------------------------------
+
+
+async def process_handwriting_ocr(
+    _ctx: dict[str, Any],
+    job_id: str,
+    file_url: str,
+    structure_mode: bool = True,
+) -> dict[str, Any]:
+    """Worker: convert handwritten image to digital text."""
+    start = time.time()
+    logger.info("handwriting_ocr.start", job_id=job_id)
+    await _update_job(job_id, "PROCESSING")
+
+    try:
+        image_bytes = await _fetch_image(file_url)
+        from app.cv.tools.handwriting_ocr import HandwritingOCR
+
+        result = HandwritingOCR().process(image_bytes, structure_mode=structure_mode)
+        elapsed = int((time.time() - start) * 1000)
+        await _update_job(job_id, "COMPLETED", result=result, elapsed_ms=elapsed)
+        logger.info("handwriting_ocr.done", job_id=job_id, ms=elapsed)
+        return result
+    except Exception as exc:
+        elapsed = int((time.time() - start) * 1000)
+        logger.error("handwriting_ocr.failed", job_id=job_id, error=str(exc))
+        await _update_job(job_id, "FAILED", error=str(exc), elapsed_ms=elapsed)
+        raise
+
+
+async def process_menu_scanner(
+    _ctx: dict[str, Any],
+    job_id: str,
+    file_url: str,
+    export_format: str = "json",
+    pos_format: bool = False,
+) -> dict[str, Any]:
+    """Worker: digitize restaurant menu from photo."""
+    start = time.time()
+    logger.info("menu_scanner.start", job_id=job_id)
+    await _update_job(job_id, "PROCESSING")
+
+    try:
+        image_bytes = await _fetch_image(file_url)
+        from app.cv.tools.menu_scanner import MenuScanner
+
+        result = MenuScanner().process(
+            image_bytes, export_format=export_format, pos_format=pos_format
+        )
+        elapsed = int((time.time() - start) * 1000)
+        await _update_job(job_id, "COMPLETED", result=result, elapsed_ms=elapsed)
+        logger.info("menu_scanner.done", job_id=job_id, ms=elapsed)
+        return result
+    except Exception as exc:
+        elapsed = int((time.time() - start) * 1000)
+        logger.error("menu_scanner.failed", job_id=job_id, error=str(exc))
+        await _update_job(job_id, "FAILED", error=str(exc), elapsed_ms=elapsed)
+        raise
+
+
+async def process_document_scanner(
+    _ctx: dict[str, Any],
+    job_id: str,
+    file_urls: list[str],
+    mode: str = "original_enhanced",
+) -> dict[str, Any]:
+    """Worker: scan, crop, deskew document(s) and produce PDF."""
+    start = time.time()
+    logger.info("document_scanner.start", job_id=job_id, pages=len(file_urls))
+    await _update_job(job_id, "PROCESSING")
+
+    try:
+        import base64
+
+        from app.cv.tools.document_scanner import DocumentScanner
+
+        scanner = DocumentScanner()
+        images = [await _fetch_image(url) for url in file_urls]
+
+        if len(images) == 1:
+            result = scanner.process(images[0], mode=mode)
+        else:
+            pdf_bytes = scanner.process_pdf(images, mode=mode)
+            result = {
+                "format": "pdf",
+                "mode": mode,
+                "page_count": len(images),
+                "pdf_b64": base64.b64encode(pdf_bytes).decode(),
+            }
+
+        elapsed = int((time.time() - start) * 1000)
+        await _update_job(job_id, "COMPLETED", result=result, elapsed_ms=elapsed)
+        logger.info("document_scanner.done", job_id=job_id, ms=elapsed)
+        return result
+    except Exception as exc:
+        elapsed = int((time.time() - start) * 1000)
+        logger.error("document_scanner.failed", job_id=job_id, error=str(exc))
+        await _update_job(job_id, "FAILED", error=str(exc), elapsed_ms=elapsed)
+        raise
+
+
+async def process_signature_extractor(
+    _ctx: dict[str, Any],
+    job_id: str,
+    file_url: str,
+) -> dict[str, Any]:
+    """Worker: extract signatures from document image."""
+    start = time.time()
+    logger.info("signature_extractor.start", job_id=job_id)
+    await _update_job(job_id, "PROCESSING")
+
+    try:
+        image_bytes = await _fetch_image(file_url)
+        from app.cv.tools.signature_extractor import SignatureExtractor
+
+        result = SignatureExtractor().process(image_bytes)
+        elapsed = int((time.time() - start) * 1000)
+        await _update_job(job_id, "COMPLETED", result=result, elapsed_ms=elapsed)
+        logger.info("signature_extractor.done", job_id=job_id, ms=elapsed)
+        return result
+    except Exception as exc:
+        elapsed = int((time.time() - start) * 1000)
+        logger.error("signature_extractor.failed", job_id=job_id, error=str(exc))
+        await _update_job(job_id, "FAILED", error=str(exc), elapsed_ms=elapsed)
+        raise
+
+
+async def process_form_field_reader(
+    _ctx: dict[str, Any],
+    job_id: str,
+    file_url: str,
+) -> dict[str, Any]:
+    """Worker: extract form field responses from filled form image."""
+    start = time.time()
+    logger.info("form_field_reader.start", job_id=job_id)
+    await _update_job(job_id, "PROCESSING")
+
+    try:
+        image_bytes = await _fetch_image(file_url)
+        from app.cv.tools.form_field_reader import FormFieldReader
+
+        result = FormFieldReader().process(image_bytes)
+        elapsed = int((time.time() - start) * 1000)
+        await _update_job(job_id, "COMPLETED", result=result, elapsed_ms=elapsed)
+        logger.info("form_field_reader.done", job_id=job_id, ms=elapsed)
+        return result
+    except Exception as exc:
+        elapsed = int((time.time() - start) * 1000)
+        logger.error("form_field_reader.failed", job_id=job_id, error=str(exc))
+        await _update_job(job_id, "FAILED", error=str(exc), elapsed_ms=elapsed)
+        raise
+
+
+# ------------------------------------------------------------------
 # Photo Intelligence Workers
 # ------------------------------------------------------------------
 
@@ -314,10 +469,16 @@ class WorkerSettings:
     """ARQ WorkerSettings for PixelMind AI job queue."""
 
     functions: ClassVar[list[object]] = [
-        # OCR & Documents
+        # OCR & Documents (Sprint 1)
         process_receipt_scanner,
         process_invoice_reader,
         process_business_card_scanner,
+        # Document AI Advanced (Sprint 2)
+        process_handwriting_ocr,
+        process_menu_scanner,
+        process_document_scanner,
+        process_signature_extractor,
+        process_form_field_reader,
         # Photo Intelligence
         process_background_remover,
         # Creator Studio
