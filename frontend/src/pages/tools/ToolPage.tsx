@@ -10,6 +10,12 @@ import {
   ReceiptResultPanel,
   InvoiceResultPanel,
   BusinessCardResultPanel,
+  // Sprint 2
+  HandwritingResultPanel,
+  MenuResultPanel,
+  DocumentScannerResultPanel,
+  SignatureExtractorResultPanel,
+  FormFieldResultPanel,
 } from '@/components/tools/ResultPanels';
 import { api } from '@/lib/api';
 import type { UploadedFile } from '@/types';
@@ -32,6 +38,32 @@ const TOOL_META: Record<string, { name: string; description: string; credits: nu
     name: 'Business Card Scanner',
     description: 'Extract contact info and export as vCard (.vcf) or CSV.',
     credits: 1,
+  },
+  // Sprint 2
+  'handwriting-ocr': {
+    name: 'Handwriting OCR',
+    description: 'Convert handwritten notes to digital text with structure detection.',
+    credits: 2,
+  },
+  'menu-scanner': {
+    name: 'Menu Scanner',
+    description: 'Digitize physical restaurant menus to structured data with prices.',
+    credits: 2,
+  },
+  'document-scanner': {
+    name: 'Document Scanner',
+    description: 'Crop, deskew, and enhance any document photo. Export as JPEG or PDF.',
+    credits: 1,
+  },
+  'signature-extractor': {
+    name: 'Signature Extractor',
+    description: 'Isolate and export signatures from signed documents.',
+    credits: 1,
+  },
+  'form-field-reader': {
+    name: 'Form Field Reader',
+    description: 'Extract handwritten responses from paper forms into structured JSON.',
+    credits: 2,
   },
   'background-remover': {
     name: 'Background Remover',
@@ -242,6 +274,22 @@ function renderResult(slug: string, result: Record<string, unknown>, jobId: stri
   }
   if (slug === 'age-predictor') {
     return <AgePredictorPanel result={result} />;
+  }
+  // Sprint 2 — Document AI Advanced
+  if (slug === 'handwriting-ocr') {
+    return <HandwritingResultPanel result={result as never} jobId={jobId} />;
+  }
+  if (slug === 'menu-scanner') {
+    return <MenuResultPanel result={result as never} jobId={jobId} />;
+  }
+  if (slug === 'document-scanner') {
+    return <DocumentScannerResultPanel result={result as never} />;
+  }
+  if (slug === 'signature-extractor') {
+    return <SignatureExtractorResultPanel result={result as never} />;
+  }
+  if (slug === 'form-field-reader') {
+    return <FormFieldResultPanel result={result as never} />;
   }
   // Generic JSON fallback for other tools
   return <GenericResultPanel result={result} />;

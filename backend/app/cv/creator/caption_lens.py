@@ -39,7 +39,7 @@ class CaptionLens:
                 "tags": [],
                 "confidence": 0.85,
             }
-        except (ImportError, Exception):  # noqa: BLE001
+        except (ImportError, Exception):
             # Fallback: basic image analysis
             img_array = np.array(pil)
             avg_brightness = float(np.mean(img_array))

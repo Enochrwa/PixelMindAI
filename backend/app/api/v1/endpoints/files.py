@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import io
 from datetime import UTC, datetime, timedelta
+import io
 from typing import TYPE_CHECKING
 
-import filetype
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+import filetype
 from PIL import Image
 from pydantic import BaseModel
 
@@ -19,6 +19,7 @@ from app.utils.auth_deps import get_current_user
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
+
     from app.db.models.user import User
 
 
@@ -39,13 +40,11 @@ class FileUploadResponse(BaseModel):
 
 
 def detect_mime_type(file_bytes: bytes) -> str:
-    """
-    Detect MIME type from file signature (magic bytes).
+    """Detect MIME type from file signature (magic bytes).
 
     Uses filetype instead of python-magic,
     avoiding libmagic OS dependency.
     """
-
     kind = filetype.guess(file_bytes)
 
     if kind:
@@ -56,7 +55,6 @@ def detect_mime_type(file_bytes: bytes) -> str:
 
 def validate_image(file_bytes: bytes) -> None:
     """Validate image integrity using Pillow."""
-
     try:
         img = Image.open(io.BytesIO(file_bytes))
         img.verify()
@@ -79,7 +77,6 @@ async def upload_file(
     current_user: User = Depends(get_current_user),
 ) -> FileUploadResponse:
     """Upload and validate an image or PDF; store it on Cloudflare R2."""
-
     file_bytes = await file.read()
 
     # Size validation

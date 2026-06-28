@@ -73,7 +73,7 @@ async def _try_enqueue_via_redis(
         pool = await create_pool(RedisSettings.from_dsn(settings.REDIS_URL))
         job = await pool.enqueue_job(func_name, *args, _queue_name=_queue_name, **kwargs)
         return job.job_id if job else None
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.warning(
             "Redis unavailable (%s); falling back to in-process execution for %s",
             exc,
@@ -99,7 +99,7 @@ async def _run_in_process(func_name: str, *args: Any, **kwargs: Any) -> None:
     ctx: dict[str, Any] = {}
     try:
         await fn(ctx, *args, **kwargs)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         # Errors are already handled inside each worker (they call _update_job FAILED)
         logger.error("In-process worker %s raised: %s", func_name, exc)
 
@@ -110,7 +110,7 @@ async def _run_in_process(func_name: str, *args: Any, **kwargs: Any) -> None:
 
 
 async def enqueue_job(
-    func: "str | Callable[..., Any]",
+    func: str | Callable[..., Any],
     *args: Any,
     _queue_name: str = "pixelmind:jobs",
     **kwargs: Any,
