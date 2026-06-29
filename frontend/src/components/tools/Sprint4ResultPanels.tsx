@@ -16,8 +16,6 @@ import {
   EyeOff,
   Shield,
   Sliders,
-  Star,
-  TrendingUp,
   XCircle,
 } from 'lucide-react';
 
