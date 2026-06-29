@@ -496,6 +496,148 @@ async def process_age_predictor(
 
 
 # ------------------------------------------------------------------
+# Photo Intelligence Advanced Workers — Sprint 4 (S4-01 … S4-05)
+# ------------------------------------------------------------------
+
+
+async def process_image_upscaler(
+    _ctx: dict[str, Any],
+    job_id: str,
+    file_url: str,
+) -> dict[str, Any]:
+    """Worker: 4x AI upscaling via Real-ESRGAN ONNX (S4-01)."""
+    start = time.time()
+    logger.info("image_upscaler.start", job_id=job_id)
+    await _update_job(job_id, "PROCESSING")
+
+    try:
+        image_bytes = await _fetch_image(file_url)
+        from app.cv.photo.image_upscaler import ImageUpscaler
+
+        result = ImageUpscaler().process(image_bytes)
+        elapsed = int((time.time() - start) * 1000)
+        await _update_job(job_id, "COMPLETED", result=result, elapsed_ms=elapsed)
+        logger.info("image_upscaler.done", job_id=job_id, ms=elapsed)
+        return result
+    except Exception as exc:
+        elapsed = int((time.time() - start) * 1000)
+        logger.error("image_upscaler.failed", job_id=job_id, error=str(exc))
+        await _update_job(job_id, "FAILED", error=str(exc), elapsed_ms=elapsed)
+        raise
+
+
+async def process_resume_photo_optimizer(
+    _ctx: dict[str, Any],
+    job_id: str,
+    file_url: str,
+) -> dict[str, Any]:
+    """Worker: score professional headshot on 6 dimensions (S4-02)."""
+    start = time.time()
+    logger.info("resume_photo_optimizer.start", job_id=job_id)
+    await _update_job(job_id, "PROCESSING")
+
+    try:
+        image_bytes = await _fetch_image(file_url)
+        from app.cv.photo.resume_photo_optimizer import ResumePhotoOptimizer
+
+        result = ResumePhotoOptimizer().process(image_bytes)
+        elapsed = int((time.time() - start) * 1000)
+        await _update_job(job_id, "COMPLETED", result=result, elapsed_ms=elapsed)
+        logger.info("resume_photo_optimizer.done", job_id=job_id, ms=elapsed)
+        return result
+    except Exception as exc:
+        elapsed = int((time.time() - start) * 1000)
+        logger.error("resume_photo_optimizer.failed", job_id=job_id, error=str(exc))
+        await _update_job(job_id, "FAILED", error=str(exc), elapsed_ms=elapsed)
+        raise
+
+
+async def process_face_blur(
+    _ctx: dict[str, Any],
+    job_id: str,
+    file_url: str,
+    mode: str = "gaussian_blur",
+) -> dict[str, Any]:
+    """Worker: detect and blur/pixelate all faces (S4-03)."""
+    start = time.time()
+    logger.info("face_blur.start", job_id=job_id, mode=mode)
+    await _update_job(job_id, "PROCESSING")
+
+    try:
+        image_bytes = await _fetch_image(file_url)
+        from app.cv.photo.face_blur import FaceBlur
+
+        result = FaceBlur().process(image_bytes, mode=mode)
+        elapsed = int((time.time() - start) * 1000)
+        await _update_job(job_id, "COMPLETED", result=result, elapsed_ms=elapsed)
+        logger.info("face_blur.done", job_id=job_id, ms=elapsed)
+        return result
+    except Exception as exc:
+        elapsed = int((time.time() - start) * 1000)
+        logger.error("face_blur.failed", job_id=job_id, error=str(exc))
+        await _update_job(job_id, "FAILED", error=str(exc), elapsed_ms=elapsed)
+        raise
+
+
+async def process_profile_picture_styler(
+    _ctx: dict[str, Any],
+    job_id: str,
+    file_url: str,
+    styles: list[str] | None = None,
+    minimal_colour_hex: str = "#F0F0F0",
+) -> dict[str, Any]:
+    """Worker: generate 4 professional background style variants (S4-04)."""
+    start = time.time()
+    logger.info("profile_picture_styler.start", job_id=job_id)
+    await _update_job(job_id, "PROCESSING")
+
+    try:
+        image_bytes = await _fetch_image(file_url)
+        from app.cv.photo.profile_picture_styler import ProfilePictureStyler
+
+        result = ProfilePictureStyler().process(
+            image_bytes,
+            styles=styles,
+            minimal_colour_hex=minimal_colour_hex,
+        )
+        elapsed = int((time.time() - start) * 1000)
+        await _update_job(job_id, "COMPLETED", result=result, elapsed_ms=elapsed)
+        logger.info("profile_picture_styler.done", job_id=job_id, ms=elapsed)
+        return result
+    except Exception as exc:
+        elapsed = int((time.time() - start) * 1000)
+        logger.error("profile_picture_styler.failed", job_id=job_id, error=str(exc))
+        await _update_job(job_id, "FAILED", error=str(exc), elapsed_ms=elapsed)
+        raise
+
+
+async def process_deepfake_detector(
+    _ctx: dict[str, Any],
+    job_id: str,
+    file_url: str,
+) -> dict[str, Any]:
+    """Worker: multi-signal deepfake detection (S4-05)."""
+    start = time.time()
+    logger.info("deepfake_detector.start", job_id=job_id)
+    await _update_job(job_id, "PROCESSING")
+
+    try:
+        image_bytes = await _fetch_image(file_url)
+        from app.cv.photo.deepfake_detector import DeepfakeDetector
+
+        result = DeepfakeDetector().process(image_bytes)
+        elapsed = int((time.time() - start) * 1000)
+        await _update_job(job_id, "COMPLETED", result=result, elapsed_ms=elapsed)
+        logger.info("deepfake_detector.done", job_id=job_id, ms=elapsed)
+        return result
+    except Exception as exc:
+        elapsed = int((time.time() - start) * 1000)
+        logger.error("deepfake_detector.failed", job_id=job_id, error=str(exc))
+        await _update_job(job_id, "FAILED", error=str(exc), elapsed_ms=elapsed)
+        raise
+
+
+# ------------------------------------------------------------------
 # Worker Settings
 # ------------------------------------------------------------------
 
@@ -525,6 +667,12 @@ class WorkerSettings:
         process_plant_disease_detector,
         # Entertainment
         process_age_predictor,
+        # Photo Intelligence Advanced (Sprint 4)
+        process_image_upscaler,
+        process_resume_photo_optimizer,
+        process_face_blur,
+        process_profile_picture_styler,
+        process_deepfake_detector,
     ]
     redis_settings: ClassVar[RedisSettings] = RedisSettings.from_dsn(settings.REDIS_URL)
     queue_name: ClassVar[str] = "pixelmind:jobs"

@@ -43,6 +43,12 @@ SUPPORTED_TOOLS: set[str] = {
     # Photo Intelligence (Sprint 3)
     "background-remover",
     "passport-photo",
+    # Photo Intelligence Advanced (Sprint 4)
+    "image-upscaler",
+    "resume-photo-optimizer",
+    "face-blur",
+    "profile-picture-styler",
+    "deepfake-detector",
     # Creator Studio
     "caption-lens",
     # Business Intel
@@ -82,6 +88,12 @@ CREDIT_COSTS: dict[str, int] = {
     # Photo Intelligence (Sprint 3)
     "background-remover": 2,
     "passport-photo": 2,
+    # Photo Intelligence Advanced (Sprint 4)
+    "image-upscaler": 3,
+    "resume-photo-optimizer": 2,
+    "face-blur": 1,
+    "profile-picture-styler": 3,
+    "deepfake-detector": 2,
     "caption-lens": 1,
     "shelf-counter": 2,
     "plant-disease-detector": 1,
@@ -169,6 +181,39 @@ class PassportPhotoRequest(BaseModel):
 
     file_id: str
     options: dict[str, Any] | None = None
+
+
+# Sprint 4 — Photo Intelligence Advanced
+class ImageUpscalerRequest(BaseModel):
+    """Image Upscaler request."""
+
+    file_id: str
+
+
+class ResumePhotoOptimizerRequest(BaseModel):
+    """Resume Photo Optimizer request."""
+
+    file_id: str
+
+
+class FaceBlurRequest(BaseModel):
+    """Face Blur request with blur mode."""
+
+    file_id: str
+    options: dict[str, Any] | None = None
+
+
+class ProfileStylerRequest(BaseModel):
+    """Profile Picture Styler request."""
+
+    file_id: str
+    options: dict[str, Any] | None = None
+
+
+class DeepfakeDetectorRequest(BaseModel):
+    """Deepfake Detector request."""
+
+    file_id: str
 
 
 # ------------------------------------------------------------------
@@ -556,6 +601,130 @@ async def list_passport_countries() -> list[dict[str, object]]:
             }
         )
     return sorted(countries, key=lambda c: str(c["name"]))
+
+
+# ------------------------------------------------------------------
+# ------------------------------------------------------------------
+# Sprint 4 — Photo Intelligence Advanced (S4-06)
+# ------------------------------------------------------------------
+
+
+@router.post("/image-upscaler/process", response_model=ProcessResponse, status_code=202)
+async def process_image_upscaler(
+    body: ImageUpscalerRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ProcessResponse:
+    """Enqueue a 4x AI upscaling job (Real-ESRGAN ONNX)."""
+    file_record, job = await _validate_file_and_deduct(
+        body.file_id, "image-upscaler", current_user, db
+    )
+    from app.core.storage import r2
+
+    file_url = r2.public_url(file_record.r2_key)
+    await enqueue_job(
+        "process_image_upscaler",
+        job.id,
+        file_url,
+        _queue_name="pixelmind:jobs",
+    )
+    return ProcessResponse(job_id=job.id)
+
+
+@router.post("/resume-photo-optimizer/process", response_model=ProcessResponse, status_code=202)
+async def process_resume_photo_optimizer(
+    body: ResumePhotoOptimizerRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ProcessResponse:
+    """Enqueue a professional headshot scoring job."""
+    file_record, job = await _validate_file_and_deduct(
+        body.file_id, "resume-photo-optimizer", current_user, db
+    )
+    from app.core.storage import r2
+
+    file_url = r2.public_url(file_record.r2_key)
+    await enqueue_job(
+        "process_resume_photo_optimizer",
+        job.id,
+        file_url,
+        _queue_name="pixelmind:jobs",
+    )
+    return ProcessResponse(job_id=job.id)
+
+
+@router.post("/face-blur/process", response_model=ProcessResponse, status_code=202)
+async def process_face_blur(
+    body: FaceBlurRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ProcessResponse:
+    """Enqueue a face blur / privacy protection job."""
+    options = body.options or {}
+    mode: str = str(options.get("mode", "gaussian_blur"))
+
+    file_record, job = await _validate_file_and_deduct(body.file_id, "face-blur", current_user, db)
+    from app.core.storage import r2
+
+    file_url = r2.public_url(file_record.r2_key)
+    await enqueue_job(
+        "process_face_blur",
+        job.id,
+        file_url,
+        mode,
+        _queue_name="pixelmind:jobs",
+    )
+    return ProcessResponse(job_id=job.id)
+
+
+@router.post("/profile-picture-styler/process", response_model=ProcessResponse, status_code=202)
+async def process_profile_picture_styler(
+    body: ProfileStylerRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ProcessResponse:
+    """Enqueue a profile picture styling job (4 background variants)."""
+    options = body.options or {}
+    styles: list[str] | None = options.get("styles")
+    minimal_colour_hex: str = str(options.get("minimal_colour_hex", "#F0F0F0"))
+
+    file_record, job = await _validate_file_and_deduct(
+        body.file_id, "profile-picture-styler", current_user, db
+    )
+    from app.core.storage import r2
+
+    file_url = r2.public_url(file_record.r2_key)
+    await enqueue_job(
+        "process_profile_picture_styler",
+        job.id,
+        file_url,
+        styles,
+        minimal_colour_hex,
+        _queue_name="pixelmind:jobs",
+    )
+    return ProcessResponse(job_id=job.id)
+
+
+@router.post("/deepfake-detector/process", response_model=ProcessResponse, status_code=202)
+async def process_deepfake_detector(
+    body: DeepfakeDetectorRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ProcessResponse:
+    """Enqueue a deepfake / AI-generated face detection job."""
+    file_record, job = await _validate_file_and_deduct(
+        body.file_id, "deepfake-detector", current_user, db
+    )
+    from app.core.storage import r2
+
+    file_url = r2.public_url(file_record.r2_key)
+    await enqueue_job(
+        "process_deepfake_detector",
+        job.id,
+        file_url,
+        _queue_name="pixelmind:jobs",
+    )
+    return ProcessResponse(job_id=job.id)
 
 
 # ------------------------------------------------------------------
