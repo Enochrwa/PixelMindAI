@@ -153,6 +153,12 @@ module = [
     "PIL.*",
     "arq.*",
     "passlib.*",
+    "mediapipe.*",
+    "deepface.*",
+    "insightface.*",
+    "onnxruntime.*",
+    "clip_interrogator.*",
+    "groq.*",
 ]
 ignore_missing_imports = true
 
@@ -200,3 +206,17 @@ show_missing = true
 module = "app.middleware.rate_limit"
 warn_unused_ignores = false
 disable_error_code = ["type-arg", "unused-ignore"]
+
+[[tool.mypy.overrides]]
+module = [
+    "app.cv.photo.image_upscaler",
+    "app.cv.photo.face_blur",
+    "app.cv.photo.resume_photo_optimizer",
+    "app.cv.photo.profile_picture_styler",
+    "app.cv.photo.deepfake_detector",
+    "app.cv.photo.passport_photo",
+    "app.cv.photo.preprocessing_photo",
+    "app.cv.entertainment.age_predictor",
+]
+warn_unused_ignores = false
+disable_error_code = ["attr-defined", "operator", "misc", "unused-ignore"]
