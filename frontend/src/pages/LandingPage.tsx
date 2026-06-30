@@ -3,9 +3,13 @@ import { Zap, Shield, Globe, ArrowRight, LayoutDashboard } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 
 const tools = [
-  { icon: '🧾', name: 'Receipt Scanner', desc: 'Extract merchant, items & totals from any receipt photo' },
+  {
+    icon: '🧾',
+    name: 'Receipt Scanner',
+    desc: 'Extract merchant, items & totals from any receipt photo',
+  },
   { icon: '🪪', name: 'Passport Photo', desc: '30+ country specs applied automatically' },
-  { icon: '🎭', name: 'Deepfake Detector', desc: "First free consumer deepfake detection tool" },
+  { icon: '🎭', name: 'Deepfake Detector', desc: 'First free consumer deepfake detection tool' },
   { icon: '✍️', name: 'Handwriting OCR', desc: 'Convert handwritten notes to digital text' },
   { icon: '🌿', name: 'Plant Disease', desc: 'Detect crop diseases from leaf photos' },
   { icon: '📸', name: 'Background Remover', desc: 'AI background removal with U2Net' },
@@ -23,10 +27,16 @@ export function LandingPage() {
     <div className="min-h-screen bg-gray-950">
       {/* Nav */}
       <nav className="flex items-center justify-between border-b border-gray-800 px-6 py-4">
-        <span className="text-2xl font-bold text-white">Pixel<span className="text-indigo-400">Mind</span> AI</span>
+        <span className="text-2xl font-bold text-white">
+          Pixel<span className="text-indigo-400">Mind</span> AI
+        </span>
         <div className="flex gap-3">
-          <Link to="/login" className="btn-secondary">Sign in</Link>
-          <Link to="/register" className="btn-primary">Get Started Free</Link>
+          <Link to="/login" className="btn-secondary">
+            Sign in
+          </Link>
+          <Link to="/register" className="btn-primary">
+            Get Started Free
+          </Link>
         </div>
       </nav>
 
@@ -36,20 +46,23 @@ export function LandingPage() {
           <Zap size={14} /> 43 AI Visual Tools · $0 to start
         </div>
         <h1 className="mt-6 text-5xl font-extrabold text-white sm:text-6xl">
-          The Unified Visual<br />
+          The Unified Visual
+          <br />
           <span className="bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
             Intelligence OS
           </span>
         </h1>
         <p className="mt-6 text-lg text-gray-400">
-          OCR, passport photos, deepfake detection, crop disease AI, background removal — 
-          43 professional computer vision tools in one platform. Built for Africa, used worldwide.
+          OCR, passport photos, deepfake detection, crop disease AI, background removal — 43
+          professional computer vision tools in one platform. Built for Africa, used worldwide.
         </p>
         <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
           <Link to="/register" className="btn-primary px-8 py-3 text-base">
             Start for Free <ArrowRight size={18} />
           </Link>
-          <Link to="/pricing" className="btn-secondary px-8 py-3 text-base">View Pricing</Link>
+          <Link to="/pricing" className="btn-secondary px-8 py-3 text-base">
+            View Pricing
+          </Link>
         </div>
       </section>
 
@@ -72,9 +85,21 @@ export function LandingPage() {
         <div className="mx-auto max-w-4xl px-6">
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
             {[
-              { icon: Zap, title: 'Fast & Async', desc: 'All CV jobs processed async. Never wait at a spinner.' },
-              { icon: Shield, title: 'Secure by Design', desc: 'MIME validation, Pillow integrity checks, rate limiting on every endpoint.' },
-              { icon: Globe, title: 'Built for Africa', desc: 'MTN MoMo payments coming. Multilingual OCR (EN/FR/Kinyarwanda). Offline-aware.' },
+              {
+                icon: Zap,
+                title: 'Fast & Async',
+                desc: 'All CV jobs processed async. Never wait at a spinner.',
+              },
+              {
+                icon: Shield,
+                title: 'Secure by Design',
+                desc: 'MIME validation, Pillow integrity checks, rate limiting on every endpoint.',
+              },
+              {
+                icon: Globe,
+                title: 'Built for Africa',
+                desc: 'MTN MoMo payments coming. Multilingual OCR (EN/FR/Kinyarwanda). Offline-aware.',
+              },
             ].map(({ icon: Icon, title, desc }) => (
               <div key={title} className="text-center">
                 <Icon size={32} className="mx-auto mb-3 text-indigo-400" />
@@ -88,10 +113,10 @@ export function LandingPage() {
 
       {/* Footer CTA */}
       <section className="border-t border-gray-800 py-12 text-center">
-        <p className="text-gray-400 text-sm">Already have an account?</p>
+        <p className="text-sm text-gray-400">Already have an account?</p>
         <Link
           to="/login"
-          className="mt-3 inline-flex items-center gap-2 rounded-lg bg-gray-800 px-6 py-2.5 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+          className="mt-3 inline-flex items-center gap-2 rounded-lg bg-gray-800 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-700"
         >
           <LayoutDashboard size={15} />
           Go to Dashboard

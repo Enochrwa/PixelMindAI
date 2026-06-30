@@ -46,7 +46,11 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Receipt Scanner', to: '/tools/receipt-scanner', icon: <Receipt size={13} /> },
       { label: 'Invoice Reader', to: '/tools/invoice-reader', icon: <FileText size={13} /> },
-      { label: 'Business Card Scanner', to: '/tools/business-card-scanner', icon: <CreditCard size={13} /> },
+      {
+        label: 'Business Card Scanner',
+        to: '/tools/business-card-scanner',
+        icon: <CreditCard size={13} />,
+      },
       { label: 'Handwriting OCR', to: '/tools/handwriting-ocr', icon: <Scan size={13} /> },
       { label: 'ID Card Reader', to: '/tools/id-card-reader', icon: <IdCard size={13} /> },
       { label: 'Document Scanner', to: '/tools/document-scanner', icon: <Layers size={13} /> },
@@ -73,13 +77,18 @@ const NAV_GROUPS: NavGroup[] = [
     icon: <Sparkles size={14} />,
     color: 'text-violet-400',
     items: [
+      {
+        label: 'Thumbnail Analyzer',
+        to: '/tools/thumbnail-analyzer',
+        icon: <BarChart3 size={13} />,
+      },
       { label: 'Caption Lens', to: '/tools/caption-lens', icon: <Sparkles size={13} /> },
-      { label: 'Meme Generator', to: '/tools/meme-generator', icon: <Smile size={13} /> },
-      { label: 'Logo Analyzer', to: '/tools/logo-analyzer', icon: <Wand2 size={13} /> },
-      { label: 'Color Palette', to: '/tools/color-palette', icon: <Image size={13} /> },
-      { label: 'Style Transfer', to: '/tools/style-transfer', icon: <Layers size={13} /> },
-      { label: 'Thumbnail Scorer', to: '/tools/thumbnail-scorer', icon: <BarChart3 size={13} /> },
-      { label: 'Visual Q&A', to: '/tools/visual-qa', icon: <ScanText size={13} /> },
+      { label: 'Meme Generator Pro', to: '/tools/meme-generator', icon: <Smile size={13} /> },
+      {
+        label: 'Video Thumbnail Extractor',
+        to: '/tools/video-thumbnail-extractor',
+        icon: <Clock size={13} />,
+      },
     ],
   },
   {
@@ -93,7 +102,11 @@ const NAV_GROUPS: NavGroup[] = [
       { label: 'Crowd Counter', to: '/tools/crowd-counter', icon: <Layers size={13} /> },
       { label: 'Safety Inspector', to: '/tools/safety-inspector', icon: <Sparkles size={13} /> },
       { label: 'Damage Assessor', to: '/tools/damage-assessor', icon: <Tag size={13} /> },
-      { label: 'Signature Verifier', to: '/tools/signature-verifier', icon: <FileText size={13} /> },
+      {
+        label: 'Signature Verifier',
+        to: '/tools/signature-verifier',
+        icon: <FileText size={13} />,
+      },
       { label: 'Meter Reader', to: '/tools/meter-reader', icon: <ScanText size={13} /> },
     ],
   },
@@ -102,8 +115,16 @@ const NAV_GROUPS: NavGroup[] = [
     icon: <Sprout size={14} />,
     color: 'text-green-400',
     items: [
-      { label: 'Plant Disease Detector', to: '/tools/plant-disease-detector', icon: <Leaf size={13} /> },
-      { label: 'Crop Yield Estimator', to: '/tools/crop-yield-estimator', icon: <BarChart3 size={13} /> },
+      {
+        label: 'Plant Disease Detector',
+        to: '/tools/plant-disease-detector',
+        icon: <Leaf size={13} />,
+      },
+      {
+        label: 'Crop Yield Estimator',
+        to: '/tools/crop-yield-estimator',
+        icon: <BarChart3 size={13} />,
+      },
       { label: 'Soil Analyzer', to: '/tools/soil-analyzer', icon: <Layers size={13} /> },
       { label: 'Pest Identifier', to: '/tools/pest-identifier', icon: <Scan size={13} /> },
       { label: 'Weed Detector', to: '/tools/weed-detector', icon: <Tag size={13} /> },
@@ -130,9 +151,7 @@ const TOP_LINKS: NavItem[] = [
   { label: 'Dashboard', to: '/dashboard', icon: <LayoutDashboard size={14} /> },
 ];
 
-const BOTTOM_LINKS: NavItem[] = [
-  { label: 'Account', to: '/account', icon: <User size={14} /> },
-];
+const BOTTOM_LINKS: NavItem[] = [{ label: 'Account', to: '/account', icon: <User size={14} /> }];
 
 function NavLinkItem({ to, icon, label }: NavItem) {
   return (
@@ -159,7 +178,7 @@ function NavGroupSection({ group }: { group: NavGroup }) {
     <div>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-gray-500 hover:bg-gray-800/50 hover:text-gray-300 transition-colors"
+        className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-gray-500 transition-colors hover:bg-gray-800/50 hover:text-gray-300"
       >
         <span className={clsx('flex items-center gap-1.5', group.color)}>
           {group.icon}
@@ -171,7 +190,7 @@ function NavGroupSection({ group }: { group: NavGroup }) {
         />
       </button>
       {open && (
-        <div className="mt-0.5 space-y-0.5 pl-2 pb-1">
+        <div className="mt-0.5 space-y-0.5 pb-1 pl-2">
           {group.items.map((item) => (
             <NavLinkItem key={item.to} {...item} />
           ))}
@@ -195,7 +214,7 @@ export function Sidebar() {
       </div>
 
       {/* Top nav */}
-      <nav className="space-y-0.5 mb-2">
+      <nav className="mb-2 space-y-0.5">
         {TOP_LINKS.map((link) => (
           <NavLink
             key={link.to}
@@ -218,13 +237,13 @@ export function Sidebar() {
       <div className="mb-2 border-t border-gray-800" />
 
       {/* Tool groups — scrollable */}
-      <nav className="flex-1 space-y-0.5 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent pr-0.5">
+      <nav className="scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent flex-1 space-y-0.5 overflow-y-auto pr-0.5">
         {NAV_GROUPS.map((group) => (
           <NavGroupSection key={group.label} group={group} />
         ))}
       </nav>
 
-      <div className="border-t border-gray-800 pt-2 mt-2">
+      <div className="mt-2 border-t border-gray-800 pt-2">
         {BOTTOM_LINKS.map((link) => (
           <NavLink
             key={link.to}

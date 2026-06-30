@@ -38,7 +38,12 @@ export function RegisterPage() {
           {error}
         </div>
       )}
-      <form onSubmit={(e) => { void handleSubmit(e); }} className="space-y-4">
+      <form
+        onSubmit={(e) => {
+          void handleSubmit(e);
+        }}
+        className="space-y-4"
+      >
         {[
           { key: 'full_name', label: 'Full name', type: 'text', placeholder: 'Jane Doe' },
           { key: 'email', label: 'Email', type: 'email', placeholder: 'you@example.com' },
@@ -47,8 +52,14 @@ export function RegisterPage() {
         ].map(({ key, label, type, placeholder }) => (
           <div key={key}>
             <label className="mb-1.5 block text-sm text-gray-300">{label}</label>
-            <input type={type} value={form[key as keyof typeof form]}
-              onChange={set(key)} className="input" placeholder={placeholder} required />
+            <input
+              type={type}
+              value={form[key as keyof typeof form]}
+              onChange={set(key)}
+              className="input"
+              placeholder={placeholder}
+              required
+            />
           </div>
         ))}
         <button type="submit" disabled={loading} className="btn-primary w-full justify-center py-3">
@@ -57,7 +68,9 @@ export function RegisterPage() {
       </form>
       <p className="mt-6 text-center text-sm text-gray-400">
         Already have an account?{' '}
-        <Link to="/login" className="text-indigo-400 hover:text-indigo-300">Sign in</Link>
+        <Link to="/login" className="text-indigo-400 hover:text-indigo-300">
+          Sign in
+        </Link>
       </p>
     </div>
   );

@@ -217,6 +217,12 @@ module = [
     "app.cv.photo.passport_photo",
     "app.cv.photo.preprocessing_photo",
     "app.cv.entertainment.age_predictor",
+    # Sprint 5 — Creator Studio Core
+    "app.cv.ai.language_client",
+    "app.cv.creator.thumbnail_analyzer",
+    "app.cv.creator.caption_lens_v2",
+    "app.cv.creator.meme_generator",
+    "app.cv.creator.video_thumbnail_extractor",
 ]
 warn_unused_ignores = false
 disable_error_code = ["attr-defined", "operator", "misc", "unused-ignore"]

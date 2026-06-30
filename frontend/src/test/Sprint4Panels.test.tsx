@@ -217,12 +217,16 @@ describe('DeepfakeResultPanel', () => {
   });
 
   it('renders LIKELY_FAKE state', () => {
-    render(<DeepfakeResultPanel result={{ ...result, verdict: 'LIKELY_FAKE', authenticity_score: 22 }} />);
+    render(
+      <DeepfakeResultPanel result={{ ...result, verdict: 'LIKELY_FAKE', authenticity_score: 22 }} />
+    );
     expect(screen.getByText(/Likely Fake/i)).toBeTruthy();
   });
 
   it('renders UNCERTAIN state', () => {
-    render(<DeepfakeResultPanel result={{ ...result, verdict: 'UNCERTAIN', authenticity_score: 55 }} />);
+    render(
+      <DeepfakeResultPanel result={{ ...result, verdict: 'UNCERTAIN', authenticity_score: 55 }} />
+    );
     expect(screen.getByText(/Uncertain/i)).toBeTruthy();
   });
 });

@@ -49,14 +49,25 @@ SUPPORTED_TOOLS: set[str] = {
     "face-blur",
     "profile-picture-styler",
     "deepfake-detector",
-    # Creator Studio
+    # Creator Studio (Sprint 5)
     "caption-lens",
+    "thumbnail-analyzer",
+    "meme-generator",
+    "video-thumbnail-extractor",
     # Business Intel
     "shelf-counter",
     # Agriculture AI
     "plant-disease-detector",
     # Entertainment
     "age-predictor",
+}
+
+# Sprint 5 Creator Studio tools
+SPRINT_FIVE_TOOLS = {
+    "thumbnail-analyzer",
+    "caption-lens",
+    "meme-generator",
+    "video-thumbnail-extractor",
 }
 
 # Sprint 1 tools (export supported)
@@ -94,7 +105,11 @@ CREDIT_COSTS: dict[str, int] = {
     "face-blur": 1,
     "profile-picture-styler": 3,
     "deepfake-detector": 2,
-    "caption-lens": 1,
+    "caption-lens": 2,
+    # Sprint 5 — Creator Studio Core
+    "thumbnail-analyzer": 2,
+    "meme-generator": 2,
+    "video-thumbnail-extractor": 3,
     "shelf-counter": 2,
     "plant-disease-detector": 1,
     "age-predictor": 1,
@@ -728,17 +743,24 @@ async def process_deepfake_detector(
 
 
 # ------------------------------------------------------------------
-# Caption Lens
+# Caption Lens (Sprint 5 — S5-03, Groq-powered multi-platform)
 # ------------------------------------------------------------------
+
+
+class CaptionLensRequest(BaseModel):
+    """Request body for caption-lens/process."""
+
+    file_id: str
+    platforms: list[str] | None = None  # instagram, twitter, linkedin
 
 
 @router.post("/caption-lens/process", response_model=ProcessResponse, status_code=202)
 async def process_caption_lens(
-    body: ProcessRequest,
+    body: CaptionLensRequest,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> ProcessResponse:
-    """Enqueue a caption generation job."""
+    """Enqueue a multi-platform social caption generation job (S5-03)."""
     file_record, job = await _validate_file_and_deduct(
         body.file_id, "caption-lens", current_user, db
     )
@@ -746,7 +768,148 @@ async def process_caption_lens(
 
     file_url = r2.public_url(file_record.r2_key)
     await enqueue_job(
-        "process_caption_lens",
+        "process_caption_lens_v2",
+        job.id,
+        file_url,
+        body.platforms or ["instagram", "twitter", "linkedin"],
+        str(current_user.id),
+        _queue_name="pixelmind:jobs",
+    )
+    return ProcessResponse(job_id=job.id)
+
+
+# ------------------------------------------------------------------
+# Thumbnail Analyzer (Sprint 5 — S5-02)
+# ------------------------------------------------------------------
+
+
+class ThumbnailAnalyzerRequest(BaseModel):
+    """Request body for thumbnail-analyzer/process."""
+
+    file_id: str
+    ab_file_id: str | None = None  # second thumbnail for A/B comparison
+
+
+@router.post("/thumbnail-analyzer/process", response_model=ProcessResponse, status_code=202)
+async def process_thumbnail_analyzer(
+    body: ThumbnailAnalyzerRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ProcessResponse:
+    """Enqueue a CTR thumbnail analysis job (S5-02). Optional A/B mode via ab_file_id."""
+    file_record, job = await _validate_file_and_deduct(
+        body.file_id, "thumbnail-analyzer", current_user, db
+    )
+    from app.core.storage import r2
+
+    file_url = r2.public_url(file_record.r2_key)
+    ab_url: str | None = None
+
+    if body.ab_file_id:
+        from sqlalchemy import select as sa_select
+
+        from app.db.models.job import UploadedFile
+
+        ab_row = await db.execute(
+            sa_select(UploadedFile).where(
+                UploadedFile.id == body.ab_file_id,
+                UploadedFile.user_id == current_user.id,
+            )
+        )
+        ab_file = ab_row.scalar_one_or_none()
+        if ab_file:
+            ab_url = r2.public_url(ab_file.r2_key)
+
+    await enqueue_job(
+        "process_thumbnail_analyzer",
+        job.id,
+        file_url,
+        ab_url,
+        _queue_name="pixelmind:jobs",
+    )
+    return ProcessResponse(job_id=job.id)
+
+
+# ------------------------------------------------------------------
+# Meme Generator Pro (Sprint 5 — S5-04)
+# ------------------------------------------------------------------
+
+
+class MemeComposeRequest(BaseModel):
+    """Request body for meme-generator/compose."""
+
+    file_id: str
+    top_text: str
+    bottom_text: str
+
+
+@router.post("/meme-generator/process", response_model=ProcessResponse, status_code=202)
+async def process_meme_generator(
+    body: ProcessRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ProcessResponse:
+    """Enqueue a meme analysis job (returns emotion + caption suggestions) (S5-04)."""
+    file_record, job = await _validate_file_and_deduct(
+        body.file_id, "meme-generator", current_user, db
+    )
+    from app.core.storage import r2
+
+    file_url = r2.public_url(file_record.r2_key)
+    await enqueue_job(
+        "process_meme_generator",
+        job.id,
+        file_url,
+        str(current_user.id),
+        _queue_name="pixelmind:jobs",
+    )
+    return ProcessResponse(job_id=job.id)
+
+
+@router.post("/meme-generator/compose", response_model=ProcessResponse, status_code=202)
+async def compose_meme(
+    body: MemeComposeRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ProcessResponse:
+    """Enqueue a meme composition job — overlays chosen text on the image (S5-04)."""
+    file_record, job = await _validate_file_and_deduct(
+        body.file_id, "meme-generator", current_user, db
+    )
+    from app.core.storage import r2
+
+    file_url = r2.public_url(file_record.r2_key)
+    await enqueue_job(
+        "process_meme_compose",
+        job.id,
+        file_url,
+        body.top_text,
+        body.bottom_text,
+        _queue_name="pixelmind:jobs",
+    )
+    return ProcessResponse(job_id=job.id)
+
+
+# ------------------------------------------------------------------
+# Video Thumbnail Extractor (Sprint 5 — S5-05)
+# ------------------------------------------------------------------
+
+
+@router.post("/video-thumbnail-extractor/process", response_model=ProcessResponse, status_code=202)
+async def process_video_thumbnail_extractor(
+    body: ProcessRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ProcessResponse:
+    """Enqueue a video thumbnail extraction and scoring job (S5-05)."""
+    file_record, job = await _validate_file_and_deduct(
+        body.file_id, "video-thumbnail-extractor", current_user, db
+    )
+    from app.core.storage import r2
+
+    file_url = r2.public_url(file_record.r2_key)
+    await enqueue_job(
+        "process_video_thumbnail_extractor",
         job.id,
         file_url,
         _queue_name="pixelmind:jobs",

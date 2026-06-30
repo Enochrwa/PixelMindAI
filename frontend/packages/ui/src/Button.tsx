@@ -9,7 +9,8 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variants = {
   primary: 'bg-indigo-700 text-white hover:bg-indigo-600 focus:ring-indigo-500',
-  secondary: 'border border-gray-700 bg-gray-900 text-gray-100 hover:bg-gray-800 focus:ring-gray-500',
+  secondary:
+    'border border-gray-700 bg-gray-900 text-gray-100 hover:bg-gray-800 focus:ring-gray-500',
   ghost: 'text-gray-400 hover:text-gray-100 focus:ring-gray-500',
 };
 
@@ -36,7 +37,14 @@ export function Button({
     >
       {loading && (
         <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
         </svg>
       )}

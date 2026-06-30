@@ -17,13 +17,13 @@ export function Header() {
           className="flex items-center gap-1.5 rounded-full border border-indigo-700/40 bg-indigo-700/10 px-3 py-1.5 text-sm transition hover:border-indigo-500/60 hover:bg-indigo-700/20"
         >
           <Zap size={13} className="text-indigo-400" />
-          <span className="text-indigo-300 font-medium">
+          <span className="font-medium text-indigo-300">
             {user ? `${user.credits_remaining} credits` : 'Credits'}
           </span>
           {user && user.credits_remaining < 5 && (
             <>
               <span className="mx-1 text-indigo-700">·</span>
-              <span className="text-xs text-indigo-400/70 flex items-center gap-0.5">
+              <span className="flex items-center gap-0.5 text-xs text-indigo-400/70">
                 Upgrade <ChevronRight size={10} />
               </span>
             </>
@@ -32,7 +32,7 @@ export function Header() {
 
         {/* User badge */}
         {user && (
-          <span className="hidden sm:block text-xs text-gray-500 truncate max-w-[140px]">
+          <span className="hidden max-w-[140px] truncate text-xs text-gray-500 sm:block">
             {user.email}
           </span>
         )}
