@@ -39,6 +39,10 @@ _CACHE_TTL = 86_400  # 24 h in seconds
 _REDIS_KEY_GLOBAL = "groq:calls_today"
 _REDIS_KEY_USER_PREFIX = "groq:user_calls:"
 
+# redis.asyncio.Redis does not expose a generic alias in all stub versions,
+# so we use a plain type alias to avoid [type-arg] mypy errors.
+_RedisClient = aioredis.Redis  # type: ignore[type-arg]
+
 
 class RateLimitError(Exception):
     """Raised when a Groq rate limit (global or per-user) is exceeded."""
@@ -52,16 +56,16 @@ class LanguageAIClient:
     """
 
     def __init__(self) -> None:
-        self._redis: aioredis.Redis[Any] | None = None
+        self._redis: _RedisClient | None = None
         self._provider: str = getattr(settings, "LANGUAGE_AI_PROVIDER", "groq")
 
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
 
-    async def _get_redis(self) -> aioredis.Redis[Any]:
+    async def _get_redis(self) -> _RedisClient:
         if self._redis is None:
-            self._redis = await aioredis.from_url(
+            self._redis = aioredis.from_url(  # type: ignore[no-untyped-call]
                 settings.REDIS_URL, encoding="utf-8", decode_responses=True
             )
         return self._redis
@@ -71,12 +75,12 @@ class LanguageAIClient:
         digest = hashlib.sha256(prompt.encode()).hexdigest()
         return f"llm:cache:{digest}"
 
-    async def _check_global_limit(self, redis: aioredis.Redis[Any]) -> None:
+    async def _check_global_limit(self, redis: _RedisClient) -> None:
         calls = await redis.get(_REDIS_KEY_GLOBAL)
         if calls and int(calls) >= _DAILY_GLOBAL_CAP:
             raise RateLimitError("Global Groq daily limit reached. Try again tomorrow.")
 
-    async def _check_user_limit(self, redis: aioredis.Redis[Any], user_id: str) -> None:
+    async def _check_user_limit(self, redis: _RedisClient, user_id: str) -> None:
         key = f"{_REDIS_KEY_USER_PREFIX}{user_id}"
         calls = await redis.get(key)
         if calls and int(calls) >= _DAILY_USER_CAP_FREE:
@@ -85,7 +89,7 @@ class LanguageAIClient:
                 "Upgrade to Pro for unlimited access."
             )
 
-    async def _increment_counters(self, redis: aioredis.Redis[Any], user_id: str) -> None:
+    async def _increment_counters(self, redis: _RedisClient, user_id: str) -> None:
         # Global counter with 24-h TTL
         pipe = redis.pipeline()
         pipe.incr(_REDIS_KEY_GLOBAL)
