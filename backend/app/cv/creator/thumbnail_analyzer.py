@@ -179,7 +179,10 @@ class ThumbnailAnalyzer:
         max_c = np.maximum(np.maximum(r, g), b).astype(float)
         min_c = np.minimum(np.minimum(r, g), b).astype(float)
         delta = max_c - min_c
-        sat = np.where(max_c > 0, delta / max_c, 0.0)
+        # Avoid division by zero for fully black pixels (max_c == 0) by using
+        # a safe denominator; the result is irrelevant there since delta is 0.
+        safe_max_c = np.where(max_c > 0, max_c, 1.0)
+        sat = np.where(max_c > 0, delta / safe_max_c, 0.0)
         avg_sat = float(np.mean(sat))
 
         # Hue diversity via unique hue buckets

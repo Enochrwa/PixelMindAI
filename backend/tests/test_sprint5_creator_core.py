@@ -300,14 +300,14 @@ class TestCaptionLensV2:
     def test_basic_fallback_describe(self) -> None:
         from app.cv.creator.caption_lens_v2 import CaptionLens
 
-        with (
-            patch("app.cv.creator.caption_lens_v2.Interrogator", side_effect=ImportError),
-            patch(
-                "app.cv.creator.caption_lens_v2.BlipForConditionalGeneration",
-                side_effect=ImportError,
-                create=True,
-            ),
-        ):
+        real_import = __import__
+
+        def _blocking_import(name: str, *args: Any, **kwargs: Any) -> Any:
+            if name in ("clip_interrogator", "transformers"):
+                raise ImportError(f"{name} not installed (forced for test)")
+            return real_import(name, *args, **kwargs)
+
+        with patch("builtins.__import__", side_effect=_blocking_import):
             desc = CaptionLens()._describe_image(Image.new("RGB", (640, 480), "green"))
 
         assert isinstance(desc, str)
