@@ -23,15 +23,7 @@ import {
 // Shared helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-function B64Image({
-  b64,
-  alt,
-  className = '',
-}: {
-  b64: string;
-  alt: string;
-  className?: string;
-}) {
+function B64Image({ b64, alt, className = '' }: { b64: string; alt: string; className?: string }) {
   if (!b64) return null;
   return (
     <img
@@ -220,8 +212,7 @@ export function ResumeOptimizerResultPanel({ result }: { result: Record<string, 
                 <div className="mb-0.5 flex justify-between text-xs text-gray-400">
                   <span>{DIMENSION_LABELS[key] ?? key}</span>
                   <span>
-                    {dimScore}/100{' '}
-                    <span className="text-gray-600">· {weight}% weight</span>
+                    {dimScore}/100 <span className="text-gray-600">· {weight}% weight</span>
                   </span>
                 </div>
                 <div className="h-2 rounded-full bg-gray-700">
@@ -284,8 +275,7 @@ export function FaceBlurResultPanel({ result }: { result: Record<string, unknown
           <span className="font-semibold text-white">{facesCount}</span>
         </div>
         <div className="rounded-lg bg-gray-800 px-3 py-2 text-sm text-gray-400">
-          Mode:{' '}
-          <span className="capitalize text-gray-200">{mode.replace(/_/g, ' ')}</span>
+          Mode: <span className="capitalize text-gray-200">{mode.replace(/_/g, ' ')}</span>
         </div>
       </div>
 
@@ -297,7 +287,11 @@ export function FaceBlurResultPanel({ result }: { result: Record<string, unknown
         </div>
       )}
 
-      <DownloadB64Button b64={resultB64} filename="privacy_protected.jpg" label="Download Protected Image" />
+      <DownloadB64Button
+        b64={resultB64}
+        filename="privacy_protected.jpg"
+        label="Download Protected Image"
+      />
     </div>
   );
 }
@@ -316,7 +310,7 @@ const STYLE_LABELS: Record<string, string> = {
 export function ProfileStylerResultPanel({ result }: { result: Record<string, unknown> }) {
   const styles = result.styles as Array<Record<string, string>> | undefined;
   const [selectedStyle, setSelectedStyle] = useState<string | null>(
-    styles && styles.length > 0 ? (styles[0]?.style_name ?? null) : null,
+    styles && styles.length > 0 ? (styles[0]?.style_name ?? null) : null
   );
 
   if (!styles || styles.length === 0) {
@@ -376,9 +370,24 @@ type EvidenceItem = {
 };
 
 const VERDICT_CONFIG = {
-  LIKELY_REAL: { icon: CheckCircle, color: 'text-green-400', bg: 'bg-green-500/10', label: 'Likely Real' },
-  UNCERTAIN: { icon: AlertTriangle, color: 'text-yellow-400', bg: 'bg-yellow-500/10', label: 'Uncertain' },
-  LIKELY_FAKE: { icon: XCircle, color: 'text-red-400', bg: 'bg-red-500/10', label: 'Likely Fake / AI-Generated' },
+  LIKELY_REAL: {
+    icon: CheckCircle,
+    color: 'text-green-400',
+    bg: 'bg-green-500/10',
+    label: 'Likely Real',
+  },
+  UNCERTAIN: {
+    icon: AlertTriangle,
+    color: 'text-yellow-400',
+    bg: 'bg-yellow-500/10',
+    label: 'Uncertain',
+  },
+  LIKELY_FAKE: {
+    icon: XCircle,
+    color: 'text-red-400',
+    bg: 'bg-red-500/10',
+    label: 'Likely Fake / AI-Generated',
+  },
 } as const;
 
 const SIGNAL_LABELS: Record<string, string> = {
@@ -411,12 +420,8 @@ export function DeepfakeResultPanel({ result }: { result: Record<string, unknown
             <VerdictIcon size={20} />
             <span className="text-lg font-bold">{verdictCfg.label}</span>
           </div>
-          <p className="mt-1 text-sm text-gray-400">
-            Authenticity score: {authScore}/100
-          </p>
-          <p className="text-xs text-gray-500">
-            Faces detected: {facesDetected}
-          </p>
+          <p className="mt-1 text-sm text-gray-400">Authenticity score: {authScore}/100</p>
+          <p className="text-xs text-gray-500">Faces detected: {facesDetected}</p>
         </div>
       </div>
 
@@ -462,7 +467,11 @@ export function DeepfakeResultPanel({ result }: { result: Record<string, unknown
             {showHeatmap ? 'Hide' : 'Show'} analysis overlay
           </button>
           {showHeatmap && (
-            <B64Image b64={heatmapB64} alt="Deepfake detection heatmap" className="max-h-80 w-full" />
+            <B64Image
+              b64={heatmapB64}
+              alt="Deepfake detection heatmap"
+              className="max-h-80 w-full"
+            />
           )}
         </>
       )}
@@ -482,7 +491,10 @@ export function DeepfakeResultPanel({ result }: { result: Record<string, unknown
 // Re-export type so ToolPage can use it
 export type Sprint4Panel = typeof UpscalerResultPanel;
 
-export const SPRINT4_PANELS: Record<string, (props: { result: Record<string, unknown> }) => JSX.Element> = {
+export const SPRINT4_PANELS: Record<
+  string,
+  (props: { result: Record<string, unknown> }) => JSX.Element
+> = {
   'image-upscaler': UpscalerResultPanel,
   'resume-photo-optimizer': ResumeOptimizerResultPanel,
   'face-blur': FaceBlurResultPanel,

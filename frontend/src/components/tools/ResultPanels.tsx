@@ -19,7 +19,9 @@ function CopyButton({ text }: { text: string }) {
   };
   return (
     <button
-      onClick={() => { void copy(); }}
+      onClick={() => {
+        void copy();
+      }}
       className="flex items-center gap-1 rounded px-2 py-1 text-xs text-gray-400 hover:bg-gray-700 hover:text-white"
     >
       {copied ? <CheckCircle size={12} className="text-green-400" /> : <Copy size={12} />}
@@ -30,9 +32,11 @@ function CopyButton({ text }: { text: string }) {
 
 function ConfidenceBadge({ score }: { score: number }) {
   const color =
-    score >= 80 ? 'text-green-400 bg-green-400/10' :
-    score >= 60 ? 'text-yellow-400 bg-yellow-400/10' :
-    'text-red-400 bg-red-400/10';
+    score >= 80
+      ? 'text-green-400 bg-green-400/10'
+      : score >= 60
+        ? 'text-yellow-400 bg-yellow-400/10'
+        : 'text-red-400 bg-red-400/10';
   return (
     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${color}`}>
       {score}% confidence
@@ -70,7 +74,9 @@ function DownloadButton({
   };
   return (
     <button
-      onClick={() => { void download(); }}
+      onClick={() => {
+        void download();
+      }}
       disabled={loading}
       className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
     >
@@ -109,7 +115,9 @@ export function ReceiptResultPanel({ result, jobId }: { result: ReceiptResult; j
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-base font-semibold text-white">{result.merchant ?? 'Unknown Merchant'}</h3>
+          <h3 className="text-base font-semibold text-white">
+            {result.merchant ?? 'Unknown Merchant'}
+          </h3>
           {result.date && <p className="text-xs text-gray-500">{result.date}</p>}
         </div>
         {result.confidence_score != null && <ConfidenceBadge score={result.confidence_score} />}
@@ -138,19 +146,27 @@ export function ReceiptResultPanel({ result, jobId }: { result: ReceiptResult; j
 
       <div className="space-y-1.5 rounded-lg bg-gray-800/50 p-3">
         <div className="flex justify-between text-sm text-gray-400">
-          <span>Subtotal</span><span>{fmt(result.subtotal)}</span>
+          <span>Subtotal</span>
+          <span>{fmt(result.subtotal)}</span>
         </div>
         <div className="flex justify-between text-sm text-gray-400">
-          <span>Tax</span><span>{fmt(result.tax)}</span>
+          <span>Tax</span>
+          <span>{fmt(result.tax)}</span>
         </div>
         <div className="flex justify-between border-t border-gray-700 pt-1.5 text-sm font-semibold text-white">
-          <span>Total</span><span>{fmt(result.total)}</span>
+          <span>Total</span>
+          <span>{fmt(result.total)}</span>
         </div>
       </div>
 
       <div className="flex gap-2">
         <DownloadButton jobId={jobId} slug="receipt-scanner" format="csv" label="CSV" />
-        <DownloadButton jobId={jobId} slug="receipt-scanner" format="qb_csv" label="QuickBooks CSV" />
+        <DownloadButton
+          jobId={jobId}
+          slug="receipt-scanner"
+          format="qb_csv"
+          label="QuickBooks CSV"
+        />
         <DownloadButton jobId={jobId} slug="receipt-scanner" format="json" label="JSON" />
       </div>
     </div>
@@ -183,8 +199,7 @@ interface InvoiceResult {
 }
 
 export function InvoiceResultPanel({ result, jobId }: { result: InvoiceResult; jobId: string }) {
-  const fmt = (v: number | null | undefined) =>
-    v != null ? v.toFixed(2) : '—';
+  const fmt = (v: number | null | undefined) => (v != null ? v.toFixed(2) : '—');
 
   return (
     <div className="space-y-4">
@@ -239,13 +254,16 @@ export function InvoiceResultPanel({ result, jobId }: { result: InvoiceResult; j
 
       <div className="space-y-1.5 rounded-lg bg-gray-800/50 p-3">
         <div className="flex justify-between text-sm text-gray-400">
-          <span>Subtotal</span><span>{fmt(result.subtotal)}</span>
+          <span>Subtotal</span>
+          <span>{fmt(result.subtotal)}</span>
         </div>
         <div className="flex justify-between text-sm text-gray-400">
-          <span>Tax</span><span>{fmt(result.tax)}</span>
+          <span>Tax</span>
+          <span>{fmt(result.tax)}</span>
         </div>
         <div className="flex justify-between border-t border-gray-700 pt-1.5 text-sm font-semibold text-white">
-          <span>Total Due</span><span>{fmt(result.total)}</span>
+          <span>Total Due</span>
+          <span>{fmt(result.total)}</span>
         </div>
       </div>
 
@@ -273,7 +291,13 @@ interface BizCardResult {
   confidence_score?: number;
 }
 
-export function BusinessCardResultPanel({ result, jobId }: { result: BizCardResult; jobId: string }) {
+export function BusinessCardResultPanel({
+  result,
+  jobId,
+}: {
+  result: BizCardResult;
+  jobId: string;
+}) {
   return (
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-4">
@@ -292,29 +316,44 @@ export function BusinessCardResultPanel({ result, jobId }: { result: BizCardResu
 
       <div className="space-y-2">
         {result.emails?.map((email) => (
-          <div key={email} className="flex items-center justify-between gap-2 rounded-lg bg-gray-800/50 px-3 py-2">
+          <div
+            key={email}
+            className="flex items-center justify-between gap-2 rounded-lg bg-gray-800/50 px-3 py-2"
+          >
             <div className="flex items-center gap-2 text-sm text-gray-300">
               <Mail size={14} className="text-indigo-400" />
-              <a href={`mailto:${email}`} className="hover:text-white">{email}</a>
+              <a href={`mailto:${email}`} className="hover:text-white">
+                {email}
+              </a>
             </div>
             <CopyButton text={email} />
           </div>
         ))}
 
         {result.phones?.map((phone) => (
-          <div key={phone} className="flex items-center justify-between gap-2 rounded-lg bg-gray-800/50 px-3 py-2">
+          <div
+            key={phone}
+            className="flex items-center justify-between gap-2 rounded-lg bg-gray-800/50 px-3 py-2"
+          >
             <div className="flex items-center gap-2 text-sm text-gray-300">
               <Phone size={14} className="text-green-400" />
-              <a href={`tel:${phone}`} className="hover:text-white">{phone}</a>
+              <a href={`tel:${phone}`} className="hover:text-white">
+                {phone}
+              </a>
             </div>
             <CopyButton text={phone} />
           </div>
         ))}
 
         {result.websites?.map((url) => (
-          <div key={url} className="flex items-center gap-2 rounded-lg bg-gray-800/50 px-3 py-2 text-sm text-gray-300">
+          <div
+            key={url}
+            className="flex items-center gap-2 rounded-lg bg-gray-800/50 px-3 py-2 text-sm text-gray-300"
+          >
             <Globe size={14} className="text-cyan-400" />
-            <a href={url} target="_blank" rel="noopener noreferrer" className="hover:text-white">{url}</a>
+            <a href={url} target="_blank" rel="noopener noreferrer" className="hover:text-white">
+              {url}
+            </a>
           </div>
         ))}
 
@@ -327,7 +366,12 @@ export function BusinessCardResultPanel({ result, jobId }: { result: BizCardResu
       </div>
 
       <div className="flex gap-2">
-        <DownloadButton jobId={jobId} slug="business-card-scanner" format="vcf" label="vCard (.vcf)" />
+        <DownloadButton
+          jobId={jobId}
+          slug="business-card-scanner"
+          format="vcf"
+          label="vCard (.vcf)"
+        />
         <DownloadButton jobId={jobId} slug="business-card-scanner" format="csv" label="CSV" />
         <DownloadButton jobId={jobId} slug="business-card-scanner" format="json" label="JSON" />
       </div>
@@ -359,7 +403,13 @@ interface HandwritingResult {
   structured_blocks?: HandwritingBlock[];
 }
 
-export function HandwritingResultPanel({ result, jobId }: { result: HandwritingResult; jobId: string }) {
+export function HandwritingResultPanel({
+  result,
+  jobId,
+}: {
+  result: HandwritingResult;
+  jobId: string;
+}) {
   const [view, setView] = useState<'text' | 'structured'>('text');
   const rawText = result.raw_text ?? '';
 
@@ -399,7 +449,7 @@ export function HandwritingResultPanel({ result, jobId }: { result: HandwritingR
 
       {view === 'text' ? (
         <div className="relative">
-          <pre className="max-h-80 overflow-auto rounded-lg bg-gray-900 p-4 text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">
+          <pre className="max-h-80 overflow-auto whitespace-pre-wrap rounded-lg bg-gray-900 p-4 text-sm leading-relaxed text-gray-300">
             {rawText || '(no text detected)'}
           </pre>
           {rawText && <CopyButton text={rawText} />}
@@ -411,7 +461,7 @@ export function HandwritingResultPanel({ result, jobId }: { result: HandwritingR
               <span className="mb-1 inline-block rounded bg-indigo-500/10 px-1.5 py-0.5 text-xs text-indigo-400">
                 {block.type.replace('_', ' ')}
               </span>
-              <p className="mt-1 text-sm text-gray-300 whitespace-pre-wrap">{block.text}</p>
+              <p className="mt-1 whitespace-pre-wrap text-sm text-gray-300">{block.text}</p>
             </div>
           ))}
         </div>
@@ -703,9 +753,7 @@ export function FormFieldResultPanel({ result }: { result: FormFieldResult }) {
   const filled = fields.filter((f) => f.value_text?.trim());
 
   const copyAll = () => {
-    const text = fields
-      .map((f) => `${f.label_text || 'Field'}: ${f.value_text}`)
-      .join('\n');
+    const text = fields.map((f) => `${f.label_text || 'Field'}: ${f.value_text}`).join('\n');
     void navigator.clipboard.writeText(text);
   };
 
@@ -740,11 +788,9 @@ export function FormFieldResultPanel({ result }: { result: FormFieldResult }) {
               className="flex items-start justify-between gap-4 rounded-lg bg-gray-800/50 px-3 py-2.5"
             >
               <div className="min-w-0">
-                {field.label_text && (
-                  <p className="text-xs text-gray-500">{field.label_text}</p>
-                )}
+                {field.label_text && <p className="text-xs text-gray-500">{field.label_text}</p>}
                 <p className="mt-0.5 text-sm text-gray-200">
-                  {field.value_text || <span className="text-gray-600 italic">empty</span>}
+                  {field.value_text || <span className="italic text-gray-600">empty</span>}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
@@ -834,12 +880,14 @@ export function BackgroundRemoverResultPanel({
   return (
     <div className="space-y-4">
       {/* Method badge + dimensions */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-          currentResult.method === 'u2net'
-            ? 'bg-indigo-500/15 text-indigo-300'
-            : 'bg-amber-500/15 text-amber-300'
-        }`}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span
+          className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+            currentResult.method === 'u2net'
+              ? 'bg-indigo-500/15 text-indigo-300'
+              : 'bg-amber-500/15 text-amber-300'
+          }`}
+        >
           {currentResult.method === 'u2net' ? '✨ U2Net AI' : '⚙️ OpenCV GrabCut'}
         </span>
         <span className="text-xs text-gray-500">
@@ -848,14 +896,18 @@ export function BackgroundRemoverResultPanel({
       </div>
 
       {/* Before/After slider */}
-      <div className="relative overflow-hidden rounded-xl border border-gray-700/50 bg-checkered"
-        style={{ background: 'repeating-conic-gradient(#374151 0% 25%, #1f2937 0% 50%) 0 0 / 20px 20px' }}>
+      <div
+        className="bg-checkered relative overflow-hidden rounded-xl border border-gray-700/50"
+        style={{
+          background: 'repeating-conic-gradient(#374151 0% 25%, #1f2937 0% 50%) 0 0 / 20px 20px',
+        }}
+      >
         <div className="relative select-none" style={{ minHeight: '200px' }}>
           {/* After (result) — full width behind */}
           <img
             src={dataUrl}
             alt="Background removed"
-            className="w-full object-contain rounded-xl"
+            className="w-full rounded-xl object-contain"
             style={{ maxHeight: '400px' }}
           />
           {/* Before (gray overlay simulating original) */}
@@ -863,16 +915,16 @@ export function BackgroundRemoverResultPanel({
             className="absolute inset-0 overflow-hidden"
             style={{ clipPath: `inset(0 ${100 - sliderX}% 0 0)` }}
           >
-            <div className="absolute inset-0 bg-gray-600/60 flex items-center justify-center">
-              <span className="text-xs text-white/70 font-medium">Original</span>
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-600/60">
+              <span className="text-xs font-medium text-white/70">Original</span>
             </div>
           </div>
           {/* Slider handle */}
           <div
-            className="absolute top-0 bottom-0 w-0.5 bg-white cursor-ew-resize"
+            className="absolute bottom-0 top-0 w-0.5 cursor-ew-resize bg-white"
             style={{ left: `${sliderX}%` }}
           >
-            <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-lg text-gray-800 text-xs font-bold">
+            <div className="absolute top-1/2 flex h-7 w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-xs font-bold text-gray-800 shadow-lg">
               ↔
             </div>
           </div>
@@ -883,7 +935,7 @@ export function BackgroundRemoverResultPanel({
             max={100}
             value={sliderX}
             onChange={(e) => setSliderX(Number(e.target.value))}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize"
+            className="absolute inset-0 h-full w-full cursor-ew-resize opacity-0"
           />
         </div>
       </div>
@@ -895,7 +947,9 @@ export function BackgroundRemoverResultPanel({
           {bgModes.map(({ key, label }) => (
             <button
               key={key}
-              onClick={() => { void resubmit(key); }}
+              onClick={() => {
+                void resubmit(key);
+              }}
               disabled={reprocessing}
               className={`rounded-lg px-2 py-1.5 text-xs font-medium transition-colors ${
                 activeBgMode === key
@@ -916,7 +970,7 @@ export function BackgroundRemoverResultPanel({
       </div>
 
       {/* Download buttons */}
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex flex-wrap gap-2">
         <button
           onClick={downloadImage}
           className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500"
@@ -1054,7 +1108,7 @@ export function PassportPhotoResultPanel({
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex flex-wrap gap-2">
         <button
           onClick={downloadPhoto}
           className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500"

@@ -74,6 +74,10 @@ class Settings(BaseSettings):
     GROQ_API_KEY: str = ""
     GROQ_MODEL: str = "llama-3.1-8b-instant"
     GROQ_MAX_TOKENS: int = 1024
+    # Language AI provider selection: "groq" | "together" | "fireworks"
+    LANGUAGE_AI_PROVIDER: str = "groq"
+    LANGUAGE_AI_API_KEY: str = ""
+    LANGUAGE_AI_MODEL: str = "mistralai/Mixtral-8x7B-Instruct-v0.1"
 
     # === Email ===
     RESEND_API_KEY: str = ""

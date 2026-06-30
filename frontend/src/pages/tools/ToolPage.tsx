@@ -20,6 +20,13 @@ import {
   BackgroundRemoverResultPanel,
   PassportPhotoResultPanel,
 } from '@/components/tools/ResultPanels';
+// Sprint 5 Creator Studio panels
+import {
+  ThumbnailResultPanel,
+  CaptionLensResultPanel,
+  MemeResultPanel,
+  VideoThumbnailResultPanel,
+} from '@/components/tools/Sprint5ResultPanels';
 import { api } from '@/lib/api';
 import type { UploadedFile } from '@/types';
 
@@ -70,7 +77,8 @@ const TOOL_META: Record<string, { name: string; description: string; credits: nu
   },
   'background-remover': {
     name: 'Background Remover',
-    description: 'Instantly remove the background from any photo. Choose transparent, white, color, or blur replacement.',
+    description:
+      'Instantly remove the background from any photo. Choose transparent, white, color, or blur replacement.',
     credits: 2,
   },
   'passport-photo': {
@@ -80,8 +88,26 @@ const TOOL_META: Record<string, { name: string; description: string; credits: nu
   },
   'caption-lens': {
     name: 'Caption Lens',
-    description: 'Auto-generate descriptive captions and tags for your images.',
-    credits: 1,
+    description:
+      'AI-powered multi-platform social captions (Instagram, Twitter, LinkedIn) from any photo.',
+    credits: 2,
+  },
+  // Sprint 5 — Creator Studio Core
+  'thumbnail-analyzer': {
+    name: 'Thumbnail Analyzer',
+    description: 'Predict YouTube thumbnail CTR across 6 dimensions. A/B test two thumbnails.',
+    credits: 2,
+  },
+  'meme-generator': {
+    name: 'Meme Generator Pro',
+    description:
+      'AI-powered meme caption suggestions from face expressions + one-click composition.',
+    credits: 2,
+  },
+  'video-thumbnail-extractor': {
+    name: 'Video Thumbnail Extractor',
+    description: 'Extract the best thumbnail frames from any video file, scored by CTR prediction.',
+    credits: 3,
   },
   'shelf-counter': {
     name: 'Shelf Counter',
@@ -102,7 +128,7 @@ const TOOL_META: Record<string, { name: string; description: string; credits: nu
 
 function GenericResultPanel({ result }: { result: Record<string, unknown> }) {
   return (
-    <pre className="overflow-auto rounded-lg bg-gray-950 p-4 text-xs text-gray-300 whitespace-pre-wrap">
+    <pre className="overflow-auto whitespace-pre-wrap rounded-lg bg-gray-950 p-4 text-xs text-gray-300">
       {JSON.stringify(result, null, 2)}
     </pre>
   );
@@ -116,13 +142,13 @@ function CaptionLensPanel({ result }: { result: Record<string, unknown> }) {
     <div className="space-y-4">
       {caption && (
         <div className="rounded-lg border border-gray-700 bg-gray-900 p-4">
-          <p className="text-sm font-medium text-gray-300 mb-1">Generated Caption</p>
+          <p className="mb-1 text-sm font-medium text-gray-300">Generated Caption</p>
           <p className="text-white">{caption}</p>
         </div>
       )}
       {tags && tags.length > 0 && (
         <div>
-          <p className="text-sm font-medium text-gray-300 mb-2">Tags</p>
+          <p className="mb-2 text-sm font-medium text-gray-300">Tags</p>
           <div className="flex flex-wrap gap-2">
             {tags.map((tag) => (
               <span key={tag} className="rounded-full bg-gray-800 px-3 py-1 text-xs text-gray-300">
@@ -157,9 +183,16 @@ function ShelfCounterPanel({ result }: { result: Record<string, unknown> }) {
 
 function PlantDiseasePanel({ result }: { result: Record<string, unknown> }) {
   const health = result['overall_health'] as string | undefined;
-  const diseases = result['diseases_detected'] as Array<{ disease: string; severity: string; coverage_ratio: number }> | undefined;
+  const diseases = result['diseases_detected'] as
+    | Array<{ disease: string; severity: string; coverage_ratio: number }>
+    | undefined;
   const recommendations = result['recommendations'] as string[] | undefined;
-  const healthColor = health === 'healthy' ? 'text-green-400' : health === 'diseased' ? 'text-red-400' : 'text-yellow-400';
+  const healthColor =
+    health === 'healthy'
+      ? 'text-green-400'
+      : health === 'diseased'
+        ? 'text-red-400'
+        : 'text-yellow-400';
   return (
     <div className="space-y-4">
       <div className="rounded-lg border border-gray-700 bg-gray-900 p-4 text-center">
@@ -173,9 +206,13 @@ function PlantDiseasePanel({ result }: { result: Record<string, unknown> }) {
             <div key={i} className="mb-2 rounded-lg border border-red-800/30 bg-red-900/10 p-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-red-300">{d.disease}</span>
-                <span className="rounded-full bg-red-900/40 px-2 py-0.5 text-xs text-red-400 capitalize">{d.severity}</span>
+                <span className="rounded-full bg-red-900/40 px-2 py-0.5 text-xs capitalize text-red-400">
+                  {d.severity}
+                </span>
               </div>
-              <p className="mt-1 text-xs text-gray-500">Coverage: {Math.round(d.coverage_ratio * 100)}%</p>
+              <p className="mt-1 text-xs text-gray-500">
+                Coverage: {Math.round(d.coverage_ratio * 100)}%
+              </p>
             </div>
           ))}
         </div>
@@ -247,7 +284,21 @@ function renderResult(slug: string, result: Record<string, unknown>, jobId: stri
     return <PassportPhotoResultPanel result={result as never} jobId={jobId} />;
   }
   if (slug === 'caption-lens') {
+    // Sprint 5: full multi-platform result
+    if (result['platforms']) {
+      return <CaptionLensResultPanel result={result as never} />;
+    }
     return <CaptionLensPanel result={result} />;
+  }
+  // Sprint 5 — Creator Studio Core
+  if (slug === 'thumbnail-analyzer') {
+    return <ThumbnailResultPanel result={result as never} />;
+  }
+  if (slug === 'meme-generator') {
+    return <MemeResultPanel result={result as never} />;
+  }
+  if (slug === 'video-thumbnail-extractor') {
+    return <VideoThumbnailResultPanel result={result as never} />;
   }
   if (slug === 'shelf-counter') {
     return <ShelfCounterPanel result={result} />;
@@ -366,12 +417,8 @@ export function ToolPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-bold text-white">
-            {meta?.name ?? slug.replace(/-/g, ' ')}
-          </h1>
-          {meta?.description && (
-            <p className="mt-1 text-sm text-gray-400">{meta.description}</p>
-          )}
+          <h1 className="text-xl font-bold text-white">{meta?.name ?? slug.replace(/-/g, ' ')}</h1>
+          {meta?.description && <p className="mt-1 text-sm text-gray-400">{meta.description}</p>}
         </div>
         {meta?.credits && (
           <span className="rounded-full bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-300">
@@ -383,7 +430,10 @@ export function ToolPage() {
       {/* Passport photo country selector */}
       {slug === 'passport-photo' && phase !== 'done' && (
         <div className="rounded-xl border border-gray-700/50 bg-gray-800/30 p-4">
-          <label className="mb-2 block text-sm font-medium text-gray-300" htmlFor="passport-country">
+          <label
+            className="mb-2 block text-sm font-medium text-gray-300"
+            htmlFor="passport-country"
+          >
             Select destination country
           </label>
           <select
@@ -408,7 +458,9 @@ export function ToolPage() {
       {/* Drop zone — shown unless done */}
       {phase !== 'done' && (
         <FileDropzone
-          onFileDrop={(f) => { void handleFileDrop(f); }}
+          onFileDrop={(f) => {
+            void handleFileDrop(f);
+          }}
           disabled={phase === 'uploading' || phase === 'queued'}
           preview={filePreview}
         />
@@ -424,11 +476,7 @@ export function ToolPage() {
 
       {/* Processing — polling */}
       {phase === 'queued' && jobId && (
-        <JobPoller
-          jobId={jobId}
-          onComplete={handleComplete}
-          onError={handleError}
-        />
+        <JobPoller jobId={jobId} onComplete={handleComplete} onError={handleError} />
       )}
 
       {/* Error */}

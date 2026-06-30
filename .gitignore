@@ -75,3 +75,4 @@ playwright-report/
 frontend/.tsbuildinfo
 frontend/packages/**/tsconfig.tsbuildinfo
 frontend/packages/**/.tsbuildinfo
+frontend/coverage/

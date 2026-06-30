@@ -638,6 +638,154 @@ async def process_deepfake_detector(
 
 
 # ------------------------------------------------------------------
+# Sprint 5 Workers — Creator Studio Core
+# ------------------------------------------------------------------
+
+
+async def process_thumbnail_analyzer(
+    _ctx: dict[str, Any],
+    job_id: str,
+    file_url: str,
+    ab_file_url: str | None = None,
+) -> dict[str, Any]:
+    """Worker: predict YouTube thumbnail CTR (S5-02). Supports optional A/B mode."""
+    start = time.time()
+    logger.info("thumbnail_analyzer.start", job_id=job_id, ab=ab_file_url is not None)
+    await _update_job(job_id, "PROCESSING")
+
+    try:
+        from app.cv.creator.thumbnail_analyzer import ThumbnailAnalyzer
+
+        analyzer = ThumbnailAnalyzer()
+        image_bytes = await _fetch_image(file_url)
+
+        if ab_file_url:
+            image_bytes_b = await _fetch_image(ab_file_url)
+            result = analyzer.process_ab(image_bytes, image_bytes_b)
+        else:
+            result = analyzer.process(image_bytes)
+
+        elapsed = int((time.time() - start) * 1000)
+        await _update_job(job_id, "COMPLETED", result=result, elapsed_ms=elapsed)
+        logger.info("thumbnail_analyzer.done", job_id=job_id, ms=elapsed)
+        return result
+    except Exception as exc:
+        elapsed = int((time.time() - start) * 1000)
+        logger.error("thumbnail_analyzer.failed", job_id=job_id, error=str(exc))
+        await _update_job(job_id, "FAILED", error=str(exc), elapsed_ms=elapsed)
+        raise
+
+
+async def process_caption_lens_v2(
+    _ctx: dict[str, Any],
+    job_id: str,
+    file_url: str,
+    platforms: list[str] | None = None,
+    user_id: str = "anonymous",
+) -> dict[str, Any]:
+    """Worker: multi-platform social caption generation via CLIP + Groq (S5-03)."""
+    start = time.time()
+    logger.info("caption_lens_v2.start", job_id=job_id, platforms=platforms)
+    await _update_job(job_id, "PROCESSING")
+
+    try:
+        image_bytes = await _fetch_image(file_url)
+        from app.cv.creator.caption_lens_v2 import CaptionLens as CaptionLensV2
+
+        result = CaptionLensV2().process(image_bytes, platforms=platforms, user_id=user_id)
+        elapsed = int((time.time() - start) * 1000)
+        await _update_job(job_id, "COMPLETED", result=result, elapsed_ms=elapsed)
+        logger.info("caption_lens_v2.done", job_id=job_id, ms=elapsed)
+        return result
+    except Exception as exc:
+        elapsed = int((time.time() - start) * 1000)
+        logger.error("caption_lens_v2.failed", job_id=job_id, error=str(exc))
+        await _update_job(job_id, "FAILED", error=str(exc), elapsed_ms=elapsed)
+        raise
+
+
+async def process_meme_generator(
+    _ctx: dict[str, Any],
+    job_id: str,
+    file_url: str,
+    user_id: str = "anonymous",
+) -> dict[str, Any]:
+    """Worker: analyse image and return Groq meme caption suggestions (S5-04)."""
+    start = time.time()
+    logger.info("meme_generator.start", job_id=job_id)
+    await _update_job(job_id, "PROCESSING")
+
+    try:
+        image_bytes = await _fetch_image(file_url)
+        from app.cv.creator.meme_generator import MemeGenerator
+
+        result = MemeGenerator().process(image_bytes, user_id=user_id)
+        elapsed = int((time.time() - start) * 1000)
+        await _update_job(job_id, "COMPLETED", result=result, elapsed_ms=elapsed)
+        logger.info("meme_generator.done", job_id=job_id, ms=elapsed)
+        return result
+    except Exception as exc:
+        elapsed = int((time.time() - start) * 1000)
+        logger.error("meme_generator.failed", job_id=job_id, error=str(exc))
+        await _update_job(job_id, "FAILED", error=str(exc), elapsed_ms=elapsed)
+        raise
+
+
+async def process_meme_compose(
+    _ctx: dict[str, Any],
+    job_id: str,
+    file_url: str,
+    top_text: str,
+    bottom_text: str,
+) -> dict[str, Any]:
+    """Worker: compose meme by overlaying chosen text on the image (S5-04)."""
+    start = time.time()
+    logger.info("meme_compose.start", job_id=job_id)
+    await _update_job(job_id, "PROCESSING")
+
+    try:
+        image_bytes = await _fetch_image(file_url)
+        from app.cv.creator.meme_generator import MemeGenerator
+
+        result = MemeGenerator().compose(image_bytes, top_text, bottom_text)
+        elapsed = int((time.time() - start) * 1000)
+        await _update_job(job_id, "COMPLETED", result=result, elapsed_ms=elapsed)
+        logger.info("meme_compose.done", job_id=job_id, ms=elapsed)
+        return result
+    except Exception as exc:
+        elapsed = int((time.time() - start) * 1000)
+        logger.error("meme_compose.failed", job_id=job_id, error=str(exc))
+        await _update_job(job_id, "FAILED", error=str(exc), elapsed_ms=elapsed)
+        raise
+
+
+async def process_video_thumbnail_extractor(
+    _ctx: dict[str, Any],
+    job_id: str,
+    file_url: str,
+) -> dict[str, Any]:
+    """Worker: extract and score thumbnail frames from video (S5-05)."""
+    start = time.time()
+    logger.info("video_thumbnail_extractor.start", job_id=job_id)
+    await _update_job(job_id, "PROCESSING")
+
+    try:
+        video_bytes = await _fetch_image(file_url)  # same helper — fetches bytes
+        from app.cv.creator.video_thumbnail_extractor import VideoThumbnailExtractor
+
+        result = VideoThumbnailExtractor().process(video_bytes)
+        elapsed = int((time.time() - start) * 1000)
+        await _update_job(job_id, "COMPLETED", result=result, elapsed_ms=elapsed)
+        logger.info("video_thumbnail_extractor.done", job_id=job_id, ms=elapsed)
+        return result
+    except Exception as exc:
+        elapsed = int((time.time() - start) * 1000)
+        logger.error("video_thumbnail_extractor.failed", job_id=job_id, error=str(exc))
+        await _update_job(job_id, "FAILED", error=str(exc), elapsed_ms=elapsed)
+        raise
+
+
+# ------------------------------------------------------------------
 # Worker Settings
 # ------------------------------------------------------------------
 
@@ -673,6 +821,12 @@ class WorkerSettings:
         process_face_blur,
         process_profile_picture_styler,
         process_deepfake_detector,
+        # Creator Studio Core (Sprint 5)
+        process_thumbnail_analyzer,
+        process_caption_lens_v2,
+        process_meme_generator,
+        process_meme_compose,
+        process_video_thumbnail_extractor,
     ]
     redis_settings: ClassVar[RedisSettings] = RedisSettings.from_dsn(settings.REDIS_URL)
     queue_name: ClassVar[str] = "pixelmind:jobs"

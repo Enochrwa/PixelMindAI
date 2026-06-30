@@ -15,7 +15,10 @@ export function CreditMeter({ credits, maxCredits, plan }: CreditMeterProps) {
         <span className="capitalize text-gray-500">{plan}</span>
       </div>
       <div className="h-1.5 rounded-full bg-gray-800">
-        <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
+        <div
+          className={`h-full rounded-full transition-all ${color}`}
+          style={{ width: `${pct}%` }}
+        />
       </div>
     </div>
   );

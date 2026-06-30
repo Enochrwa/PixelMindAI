@@ -14,7 +14,13 @@ const plans = [
     name: 'Starter',
     price: '$9',
     credits: 300,
-    features: ['300 credits/month', 'All 43 tools', '7-day file retention', 'Priority queue', 'Email support'],
+    features: [
+      '300 credits/month',
+      'All 43 tools',
+      '7-day file retention',
+      'Priority queue',
+      'Email support',
+    ],
     cta: 'Upgrade',
     highlight: true,
   },
@@ -22,7 +28,14 @@ const plans = [
     name: 'Pro',
     price: '$29',
     credits: 1500,
-    features: ['1,500 credits/month', 'All 43 tools', '30-day retention', 'API access', 'Batch processing', 'Priority support'],
+    features: [
+      '1,500 credits/month',
+      'All 43 tools',
+      '30-day retention',
+      'API access',
+      'Batch processing',
+      'Priority support',
+    ],
     cta: 'Upgrade',
     highlight: false,
   },
@@ -43,12 +56,13 @@ export function PricingPage() {
           >
             <h3 className="font-semibold text-white">{plan.name}</h3>
             <p className="mt-2 text-4xl font-bold text-white">
-              {plan.price}<span className="text-base font-normal text-gray-400">/mo</span>
+              {plan.price}
+              <span className="text-base font-normal text-gray-400">/mo</span>
             </p>
             <ul className="mt-6 space-y-3">
               {plan.features.map((f) => (
                 <li key={f} className="flex items-center gap-2 text-sm text-gray-300">
-                  <Check size={14} className="text-indigo-400 shrink-0" />
+                  <Check size={14} className="shrink-0 text-indigo-400" />
                   {f}
                 </li>
               ))}
@@ -67,7 +81,9 @@ export function PricingPage() {
         ))}
       </div>
       <p className="mt-8 text-center text-sm text-gray-500">
-        <Link to="/" className="text-indigo-400 hover:underline">← Back home</Link>
+        <Link to="/" className="text-indigo-400 hover:underline">
+          ← Back home
+        </Link>
       </p>
     </div>
   );

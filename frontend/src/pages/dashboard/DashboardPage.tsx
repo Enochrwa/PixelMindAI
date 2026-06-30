@@ -6,7 +6,13 @@ const modules = [
   { icon: Image, label: 'Photo Intelligence', tools: 7, slug: 'background-remover', color: 'cyan' },
   { icon: Sparkles, label: 'Creator Studio', tools: 7, slug: 'caption-lens', color: 'violet' },
   { icon: BarChart3, label: 'Business Intel', tools: 8, slug: 'shelf-counter', color: 'amber' },
-  { icon: Sprout, label: 'Agriculture AI', tools: 6, slug: 'plant-disease-detector', color: 'green' },
+  {
+    icon: Sprout,
+    label: 'Agriculture AI',
+    tools: 6,
+    slug: 'plant-disease-detector',
+    color: 'green',
+  },
   { icon: Smile, label: 'Entertainment', tools: 7, slug: 'age-predictor', color: 'pink' },
 ];
 
@@ -27,14 +33,19 @@ export function DashboardPage() {
             <p className="text-xs text-gray-400">Resets monthly on paid plans</p>
           </div>
         </div>
-        <Link to="/account" className="btn-secondary text-xs">Upgrade</Link>
+        <Link to="/account" className="btn-secondary text-xs">
+          Upgrade
+        </Link>
       </div>
 
       {/* Module grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {modules.map(({ icon: Icon, label, tools, slug }) => (
-          <Link key={slug} to={`/tools/${slug}`}
-            className="card group p-6 transition hover:border-indigo-700/60 hover:bg-gray-900">
+          <Link
+            key={slug}
+            to={`/tools/${slug}`}
+            className="card group p-6 transition hover:border-indigo-700/60 hover:bg-gray-900"
+          >
             <Icon size={24} className="mb-3 text-indigo-400 transition group-hover:scale-110" />
             <h3 className="font-semibold text-white">{label}</h3>
             <p className="mt-1 text-sm text-gray-400">{tools} tools</p>

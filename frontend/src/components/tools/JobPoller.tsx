@@ -71,10 +71,7 @@ export function JobPoller({ jobId, onComplete, onError }: JobPollerProps) {
 
         // Update progress and message
         pollCountRef.current += 1;
-        const rawProgress = Math.min(
-          Math.round((elapsed / TOTAL_TIMEOUT_MS) * 95),
-          95
-        );
+        const rawProgress = Math.min(Math.round((elapsed / TOTAL_TIMEOUT_MS) * 95), 95);
         // Clamp to a minimum that grows steadily based on poll count too
         const minProgress = Math.min(pollCountRef.current * 4, 85);
         const displayProgress = Math.max(rawProgress, minProgress);
@@ -85,14 +82,14 @@ export function JobPoller({ jobId, onComplete, onError }: JobPollerProps) {
           STATUS_MESSAGES.length - 1
         );
         setStatusMsg(
-          data.status === 'PROCESSING'
-            ? STATUS_MESSAGES[msgIdx]
-            : `Queued — waiting for worker…`
+          data.status === 'PROCESSING' ? STATUS_MESSAGES[msgIdx] : `Queued — waiting for worker…`
         );
 
         // Exponential backoff
         intervalMsRef.current = Math.min(intervalMsRef.current * 1.5, MAX_INTERVAL_MS);
-        timeoutId = setTimeout(() => { void poll(); }, intervalMsRef.current);
+        timeoutId = setTimeout(() => {
+          void poll();
+        }, intervalMsRef.current);
       } catch {
         // Network hiccup — retry with backoff instead of failing immediately
         if (Date.now() - startTimeRef.current >= TOTAL_TIMEOUT_MS) {
@@ -102,13 +99,17 @@ export function JobPoller({ jobId, onComplete, onError }: JobPollerProps) {
         intervalMsRef.current = Math.min(intervalMsRef.current * 2, MAX_INTERVAL_MS);
         if (!cancelled) {
           setStatusMsg('Connection issue — retrying…');
-          timeoutId = setTimeout(() => { void poll(); }, intervalMsRef.current);
+          timeoutId = setTimeout(() => {
+            void poll();
+          }, intervalMsRef.current);
         }
       }
     };
 
     // First poll after a short delay
-    timeoutId = setTimeout(() => { void poll(); }, BASE_INTERVAL_MS);
+    timeoutId = setTimeout(() => {
+      void poll();
+    }, BASE_INTERVAL_MS);
 
     return () => {
       cancelled = true;
@@ -122,16 +123,14 @@ export function JobPoller({ jobId, onComplete, onError }: JobPollerProps) {
   };
 
   return (
-    <div className="rounded-xl border border-indigo-500/30 bg-indigo-500/5 p-5 space-y-4">
+    <div className="space-y-4 rounded-xl border border-indigo-500/30 bg-indigo-500/5 p-5">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <Loader2 size={16} className="animate-spin text-indigo-400 shrink-0" />
+          <Loader2 size={16} className="shrink-0 animate-spin text-indigo-400" />
           <div>
             <p className="text-sm font-medium text-indigo-300">{statusMsg}</p>
-            <p className="text-xs text-gray-500 mt-0.5">
-              AI processing usually takes 5–30 seconds
-            </p>
+            <p className="mt-0.5 text-xs text-gray-500">AI processing usually takes 5–30 seconds</p>
           </div>
         </div>
         <div className="flex items-center gap-1 text-xs text-gray-500">
