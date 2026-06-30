@@ -15,9 +15,8 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import numpy as np
-import pytest
 from PIL import Image
-
+import pytest
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -401,21 +400,21 @@ class TestVideoThumbnailExtractor:
     def _make_minimal_video(self) -> bytes:
         """Create a minimal valid MP4 by writing a few JPEG frames via cv2."""
         try:
-            import cv2
+            from pathlib import Path
             import tempfile
-            import os
 
-            tmp = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
-            tmp.close()
+            import cv2
+
+            with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as tmp_fh:
+                tmp_path = Path(tmp_fh.name)
             fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-            out = cv2.VideoWriter(tmp.name, fourcc, 5.0, (320, 240))
+            out = cv2.VideoWriter(str(tmp_path), fourcc, 5.0, (320, 240))
             for i in range(25):  # 5 s at 5 fps
                 frame = np.full((240, 320, 3), [i * 10 % 256, 100, 200], dtype=np.uint8)
                 out.write(frame)
             out.release()
-            with open(tmp.name, "rb") as f:
-                data = f.read()
-            os.unlink(tmp.name)
+            data = tmp_path.read_bytes()
+            tmp_path.unlink(missing_ok=True)
             return data
         except Exception:
             return b""
